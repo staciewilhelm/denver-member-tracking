@@ -48,6 +48,8 @@
 					m.venmo_handle = val + m.venmo_handle.replace(/\@/g, '');
 			}
 
+			m.today = new Date();
+
 			m.dateOptions = {
 				'year-format': 'yy',
 				'starting-day': 1
@@ -66,7 +68,11 @@
 				induction_date: false,
 				join_date: false,
 				transfer_date: false,
-				retirement_date: false
+				retirement_date: false,
+				loa_start_date: false,
+				loa_end_date: false,
+				injury_start_date: false,
+				injury_end_date: false
 			};
 
 

@@ -77,6 +77,11 @@ p {
 
 .navbar {
 	margin-bottom: 0;
+	position: fixed;
+	top:0;
+	left: 0;
+	z-index: 1000;
+	width: 100%;
 }
 
 
@@ -101,7 +106,8 @@ p {
     width: 0;
     height: 100%;
     margin-right: -350px;
-    margin-top: -55px;
+    margin-top: 52px;
+    padding-bottom: 75px;
     overflow-y: auto;
     background: #666;
     -webkit-transition: all 0.5s ease;
@@ -216,6 +222,11 @@ p {
     }
 }
 
+
+
+#page-wrapper form {
+	margin-top: 50px;
+}
 
 
 /* sb admin styles */
@@ -557,9 +568,17 @@ div.datepicker-wrap span.input-group-btn {
 }
 
 div.col-date div.datepicker-wrap input[type="text"].datepicker {
-	width: 50%;
+	width: 70%;
 }
 
+span.inline-date {
+	margin-left: 10px;
+}
+
+textarea.notes {
+	max-width: 100%;
+	max-height: 50px;
+}
 
 .panel button {
 	color: #337ab7;
@@ -571,5 +590,17 @@ div.col-date div.datepicker-wrap input[type="text"].datepicker {
 	height: auto;
 }
 
+td.center {
+	text-align: center;
+}
 
+td span {
+	display: inline-block;
+	margin-top: 4px;
+	margin-left: 4px;
+	background-color: none;
+}
 
+#sidebar-wrapper .table-hover > tbody > tr:hover {
+  background-color: #444;
+}
