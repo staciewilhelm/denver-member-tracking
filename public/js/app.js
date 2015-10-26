@@ -7,7 +7,8 @@
 			'ngResource',
 			'ui.bootstrap'
 		])
+		.constant('_',
+			window._
+		)
 
 })();
-
-

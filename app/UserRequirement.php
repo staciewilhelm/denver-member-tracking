@@ -2,14 +2,15 @@
 
 use Illuminate\Database\Eloquent\Model;
 
-class UserClockin extends Model {
+class UserRequirement extends Model {
 
 	// Use the time_entries table
-	protected $table = 'user_clockins';
+	protected $table = 'user_requirements';
 
 	// An array of the fields we can fill in the time_entries table
-	protected $fillable = ['user_id', 'clock_number', 'type', 'location', 'calendar_name', 'calendar_date', 'calendar_time',
-												'late_clockin', 'late_clockin_note', 'invalid', 'invalid_desc'];
+	protected $fillable = ['user_id', 'year', 'quarter', 'min_practice', 'practice_count', 'min_scrimmage', 'scrimmage_count', 
+												'min_activity', 'activity_count', 'min_facility', 'facility_count', 'min_bout', 'bout_count',
+												'min_committee', 'committee_count'];
 
 	protected $hidden = ['user_id', 'created_at', 'updated_at'];
 

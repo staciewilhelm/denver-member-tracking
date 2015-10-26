@@ -4,9 +4,9 @@
 
 	angular
 		.module('denverTracking')
-		.factory('userclockins', userclockins);
+		.factory('userClockins', userClockins);
 
-		function userclockins($resource) {
+		function userClockins($resource) {
 
 			// ngResource call to the API with id as a paramaterized URL
 			// and setup for the update method
@@ -35,8 +35,8 @@
 
 			// Use Moment.js to get the duration of the time entry
 			function getTimeDiff(start, end) {
-				var diff = moment(end).diff(moment(start));
-				var duration = moment.duration(diff);
+				var diff = moment(end).diff(moment(start)),
+						duration = moment.duration(diff);
 				return {
 					duration: duration
 				}

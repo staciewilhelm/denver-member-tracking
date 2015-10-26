@@ -19,10 +19,17 @@ strong {
 	color: #3d3d3d;
 }
 a {
-	color: #cfd9e7;
+	color: #337ab7;
 	text-decoration: none;
 }
 a:hover {
+	text-decoration: none;
+}
+a.special {
+	color: #cfd9e7;
+	text-decoration: none;
+}
+a.special:hover {
 	text-decoration: underline;
 	color: #fff;
 }
@@ -72,6 +79,18 @@ h6 {
 p {
 	font-family: 'Open Sans',Helvetica,sans-serif;
 	font-weight: 300;
+}
+
+th.center,
+td.center {
+	text-align: center;
+}
+
+td span {
+	display: inline-block;
+	margin-top: 4px;
+	margin-left: 4px;
+	background-color: none;
 }
 /* end Denver styles */
 
@@ -142,10 +161,47 @@ p {
 	color: #ebebeb;
 }
 
+.transactions table.table > tbody > tr td span {
+	padding: 0;
+	margin: 0;
+}
+
 .practice-history table.table > tbody > tr:hover {
 	background-color: #555;
 }
 
+.transactions table.table > tbody > tr.invalid,
+.practice-history table.table > tbody > tr.invalid {
+	background-color:#c00 !important;
+}
+
+.standings {}
+.standing {
+	border-top: 1px solid #dddddd;
+	padding-top: 7px;
+}
+.standing p.header {}
+.standing p.header strong {
+	color: #ebebeb;
+	font-size: 16px;
+}
+
+p span.dashboard-warning,
+.practice-history p span.warning,
+.standing p.header strong.warning {
+	font-weight: bold;
+	color: #fff;
+	margin: 0;
+	padding: 4px;
+	background-color: #c00;
+}
+.standing p.header span.dates {margin-left: 10px;}
+
+.standing p.footer {font-size: 11px;}
+.standing p.footer strong {
+	color: #ebebeb;
+	font-size: 12px;
+}
 
 
 .sidebar-nav {
@@ -224,6 +280,7 @@ p {
 
 
 
+#page-wrapper.dashboard, 
 #page-wrapper form {
 	margin-top: 50px;
 }
@@ -391,6 +448,7 @@ table.dataTable thead .sorting:after {
 
 .huge {
     font-size: 40px;
+    margin: 10px 0 20px;
 }
 
 .panel-green {
@@ -474,8 +532,9 @@ table.dataTable thead .sorting:after {
 	padding: 6px !important;
 }
 
-.requirements-table table thead th.center {
-	text-align: center;
+.requirements-table table thead th {
+	vertical-align: middle;
+	width: 8%;
 }
 
 .requirements-table table td span.sep {
@@ -486,11 +545,22 @@ table.dataTable thead .sorting:after {
 	width: 10px;
 }
 
+.requirements-table table td span.no-top {
+	margin-top: 0 !important;
+}
+.requirements-table table td span.warning {
+	font-weight: bold;
+	color: #fff;
+	margin: 0;
+	background-color: #c00;
+}
+
 .requirements-table table input {
 	display: inline-block;
 	float: right !important;
 	padding: 3px 6px;
 	border: 1px solid #ccc;
+	text-align: center;
 }
 
 .requirements-table table input.xsm {
@@ -503,9 +573,23 @@ table.dataTable thead .sorting:after {
 	cursor: not-allowed;
 }
 
+.lft-pad {padding-left: 10px;}
+
+.lft-indent.checkbox {
+	margin-left: 25px;
+}
+
 
 .checkbox label {
 	margin-right: 20px;
+}
+
+.checkbox-inline.no-lft {
+	padding-left: 0;
+}
+
+.checkbox-inline.no-lft input {
+	margin-right: 7px;
 }
 
 span.warning {
@@ -577,7 +661,14 @@ span.inline-date {
 
 textarea.notes {
 	max-width: 100%;
-	max-height: 50px;
+	height: 75px;
+	max-height: 75px;
+}
+
+button.btn-primary.selected {
+  color: #ffffff;
+  background-color: #286090;
+  border-color: #204d74;
 }
 
 .panel button {
@@ -590,16 +681,8 @@ textarea.notes {
 	height: auto;
 }
 
-td.center {
-	text-align: center;
-}
 
-td span {
-	display: inline-block;
-	margin-top: 4px;
-	margin-left: 4px;
-	background-color: none;
-}
+button.btn-inline {margin-left:15px;}
 
 #sidebar-wrapper .table-hover > tbody > tr:hover {
   background-color: #444;

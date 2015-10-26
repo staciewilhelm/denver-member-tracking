@@ -15,7 +15,7 @@
 
 	<!-- <link href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css" rel="stylesheet" type="text/css"> -->
 
-	<link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
 	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
 	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -46,9 +46,10 @@
 					<li><a href="/"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
 					@if (Auth::user()->have_role->name !== 'Member')
 					<li><a href="/members"><i class="fa fa-user fa-fw"></i> Member Manager</a></li>
-					<li><a href="/reports"><i class="fa fa-file-text-o fa-fw"></i></i> Reporting</a></li>
-					<li><a href="/members/sync"><i class="fa fa-refresh fa-fw"></i></i> Sync Members</a></li>
+					<li><a href="/payments"><i class="fa fa-file-text-o fa-fw"></i></i> Venmo Transactions</a></li>
+					<!-- <li><a href="/members/sync"><i class="fa fa-refresh fa-fw"></i></i> Sync Members</a></li> -->
 					<li><a href="/payments/create"><i class="fa fa-credit-card fa-fw"></i></i> New Venmo Charge</a></li>
+					<li><a href="/reports"><i class="fa fa-file-text-o fa-fw"></i></i> Reporting</a></li>
 					@endif
 				@endif
 				</ul>
@@ -56,7 +57,7 @@
 				<ul class="nav navbar-nav navbar-right">
 					@if (Auth::guest())
 						<li><a href="/auth/login">Login</a></li>
-						<!-- <li><a href="/auth/register">Register</a></li> -->
+						<li><a href="/auth/register">Register</a></li>
 					@else
 						<li><a href="/auth/logout">Logout</a></li>
 						<!-- <li class="dropdown">
@@ -78,11 +79,11 @@
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.1/js/bootstrap.min.js"></script>
 	 -->
-	
-
+	<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.3/angular.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.3/angular-resource.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.13.0/ui-bootstrap-tpls.min.js"></script>
+
 	<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
 
 <!-- located in example file -->
@@ -93,15 +94,19 @@
 	<script src="/js/morris-data.js"></script>
   -->
 
-
 	<script src="/js/app.js"></script>
-	<script src="/js/controllers/Dashboard.js"></script>
 	<script src="/js/controllers/ClockIn.js"></script>
+	<script src="/js/controllers/Dashboard.js"></script>
 	<script src="/js/controllers/Member.js"></script>
 	<script src="/js/controllers/Modal.js"></script>
 
+	<script src="/js/services/core.js"></script>
+	<script src="/js/services/calculate-requirements.js"></script>
+
 	<script src="/js/services/clockin.js"></script>
 	<script src="/js/services/user.js"></script>
+
+	<script src="/js/filters/capitalize.js"></script>
 
 </body>
 </html>

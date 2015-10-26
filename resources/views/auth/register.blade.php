@@ -49,10 +49,52 @@
 							</div>
 						</div>
 
+						<input type="hidden" name="role_id" value="3">
+
 						<div class="form-group">
 							<label class="col-md-4 control-label">Confirm Password</label>
 							<div class="col-md-6">
 								<input type="password" class="form-control" name="password_confirmation">
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label class="col-md-4 control-label">Clock Number</label>
+							<div class="col-md-6">
+								<input type="number" class="form-control" name="clock_number" value="[[ old('clock_number') ]]">
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label class="col-md-4 control-label">Phone #</label>
+							<div class="col-md-6">
+								<input type="phone" class="form-control" name="phone" value="[[ old('phone') ]]">
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label class="col-md-4 control-label">DOB</label>
+							<div class="col-md-6">
+								<input type="date" class="form-control" name="dob" value="[[ old('dob') ]]">
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label class="col-md-4 control-label">Alt Email</label>
+							<div class="col-md-6">
+								<input type="email" class="form-control" name="alt_email" value="[[ old('alt_email') ]]">
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label class="col-md-4 control-label">Identify As:</label>
+							<div class="col-md-6">
+								<label class="checkbox-inline">
+									<input type="radio" name="identifies_as" id="Female" value="Female">&nbsp;&nbsp;Female
+								</label>
+								<label class="checkbox-inline">
+									<input type="radio" name="identifies_as" id="Male" value="Male">&nbsp;&nbsp;Male
+								</label>
 							</div>
 						</div>
 

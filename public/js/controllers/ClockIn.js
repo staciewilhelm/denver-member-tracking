@@ -6,7 +6,7 @@
 		.module('denverTracking')
 		.controller('ClockIn', ClockIn);
 
-		function ClockIn(userclockins, user, $scope) {
+		function ClockIn(userClockins, user, $scope) {
 			var clock = this;
 
 			clock.whateverThings = function() {
@@ -28,7 +28,7 @@
 			clock.totalTime = {};
 			clock.users = [];
 
-			// Initialize the clockIn and clockOut times to the current userclockins.
+			// Initialize the clockIn and clockOut times to the current userClockins.
 			clock.clockIn = moment();
 			clock.clockOut = moment();
 
@@ -50,7 +50,7 @@
 			// Fetches the time entries and puts the results
 			// on the clock.timeentries array
 			function getTimeEntries() {
-				userclockins.getTime().then(function(results) {
+				userClockins.getTime().then(function(results) {
 					clock.timeentries = results;
 					updateTotalTime(clock.timeentries);
 					console.log(clock.timeentries);
@@ -62,7 +62,7 @@
 			// Updates the values in the total time box by calling the
 			// getTotalTime method on the time service
 			function updateTotalTime(timeentries) {
-				//clock.totalTime = userclockins.getTotalTime(timeentries);
+				//clock.totalTime = userClockins.getTotalTime(timeentries);
 			}
 
 			// Submit the time entry that will be called 
@@ -83,7 +83,7 @@
 
 				// Call to the saveTime method on the time service
 				// to save the new time entry to the database
-				userclockins.saveTime({
+				userClockins.saveTime({
 					"user_id":clock.timeEntryUser.id,
 					"start_time":clock.clockIn,
 					"end_time":clock.clockOut,
@@ -121,7 +121,7 @@
 				}
 
 				// Update the time entry and then refresh the list
-				userclockins.updateTime(updatedTimeEntry).then(function(success) {
+				userClockins.updateTime(updatedTimeEntry).then(function(success) {
 					getTimeEntries();
 					$scope.showEditDialog = false;
 					console.log(success);
@@ -136,7 +136,7 @@
 
 				var id = timeentry.id;
 
-				userclockins.deleteTime(id).then(function(success) {
+				userClockins.deleteTime(id).then(function(success) {
 					getTimeEntries();
 					console.log(success);
 				}, function(error) {

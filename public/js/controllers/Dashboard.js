@@ -6,9 +6,176 @@
 		.module('denverTracking')
 		.controller('Dashboard', Dashboard);
 
-		function Dashboard($scope) {
+		function Dashboard(_, $scope, core, calcReqs) {
 
-			var dash = this;
+			var d = this;
+
+			d.showAccountInfo = true;
+			d.showPracticeHistory = false;
+
+			// set default values
+			d.roleId = '';
+			d.groupId = '';
+			d.memberStatus = '';
+			d.memberType = '';
+			d.memberLevel = '';
+			d.skaterLevel = '';
+
+			d.homeTeams = [];
+			d.travelTeams = [];
+			d.selectedHomeTeam = null;
+			d.seletedTravelTeams = [];
+
+			// set options
+			d.currentQuarter = core.currentQuarter;
+			d.memberStatuses = core.memberStatuses;
+			d.memberTypes = core.memberTypes;
+			d.memberLevels = core.memberLevels;
+			d.skaterLevels = core.skaterLevels;
+			d.gURLs = core.googleURLs;
+
+			d.setUserData = function(userData) {
+				d.user = userData;
+
+				/*d.roleId = userData.role_id;
+				d.groupId = userData.group_id;*/
+
+				d.venmoHandle = d.user.venmo_handle.replace(/@/g, '');
+				d.memberStatus = userData.mem_status;
+				/*d.identifiesAs = d.user.identifies_as;
+
+				
+				d.memberType = userData.mem_type;
+				d.memberLevel = userData.mem_level;
+				d.skaterLevel = userData.skater_level;
+
+				d.dob = userData.dob;
+				d.join_date = userData.join_date;
+				d.induction_date = userData.induction_date;
+				d.transfer_date = userData.transfer_date;
+				d.retired_date = userData.retired_date;
+
+				d.isTransfer = userData.is_transfer;*/
+			};
+
+			d.setUserBelongsData = function(userClockins, userStandings, userTransactions) {
+				// set quarter for each clockin
+				d.userClockins = [];
+
+				d.loggedPractices = 0;
+				d.loggedScrimmages = 0;
+
+				_.each(userClockins, function(c) {
+					c.qtr = moment(c.clocked).quarter();
+
+					switch (c.type) {
+						case 'practice':
+							d.loggedPractices++;
+							break;
+						case 'scrimmage':
+							d.loggedScrimmages++;
+							break;
+					}
+
+					d.userClockins.push(c);
+				});
+
+				d.activeStanding = null;
+				// loop through user standings to ensure each has an end date
+				_.each(userStandings, function(standing) {
+					// if a record does not has an end date, we will mark
+					// it as active and pull it out of the listing
+					if (_.isEmpty(standing.end_date)) d.activeStanding = standing;
+				});
+
+				// loop through user standings to ensure each has an end date
+				d.userTransactions = [];
+				d.currentBalance = 0;
+				d.balancePastDue = false;
+				d.balanceDueDate = null;
+
+				d.currBalance = {
+					amount: 0,
+					pastDue: false,
+					dueDate: null,
+					desc: ''
+				};
+
+				_.each(userTransactions, function(t) {
+					if (t.type === 'Charge' && _.isNull(t.trans_final)) {
+						d.currBalance.amount += t.amount;
+						d.currBalance.desc += t.desc+(_.isNull(d.currBalance.desc) ? '' : '; ');
+
+						if (_.isNull(d.currBalance.dueDate) || (!_.isNull(d.currBalance.dueDate) && new Date(t.due) < d.currBalance.dueDate))
+							d.currBalance.dueDate = new Date(t.due);
+
+						if (new Date(core.today) > new Date(t.due)) d.currBalance.pastDue = true;
+					}
+
+					d.userTransactions.push(t);
+
+				});
+			};
+
+			d.setRequirementData = function(data, relatedData) {
+				d.remReqs = calcReqs.getRemaining(data, relatedData);
+			};
+
+			d.setRelatedData = function(committees, positions, teams) {
+				d.committees = [];
+				d.isACommitteeHead = false;
+				var isHead = false;
+				_.each(committees, function(c) {
+					if (!d.isACommitteeHead && (c.head_user_id === d.user.id)) d.isACommitteeHead = true;
+					isHead = (c.head_user_id === d.user.id) ? true : false;
+					d.committees.push({name:c.name, googleRef: c.google_ref, isHead: isHead});
+				});
+
+				d.positions = [];
+				_.each(positions, function(p) {
+					d.positions.push({name:p.name});
+				});
+
+				d.teams = [];
+				d.coachTeams = [];
+				d.captainTeams = [];
+				_.each(teams, function(p) {
+					if (p.pivot.is_coach) d.coachTeams.push(p.name);
+					if (p.pivot.is_captain) d.captainTeams.push(p.name);
+					d.teams.push({name:p.name});
+				});
+
+			};
+
+			/* Toggle Sidebar Data */
+			d.toggleRecentTransactions = function() {
+				if (!d.showRecentTransactions) {
+					d.showRecentTransactions = true;
+					d.showRecentClockIns = false;
+					d.showUserStandings = false;
+				}
+			};
+
+			d.toggleRecentClockins = function() {
+				if (!d.showRecentClockIns) {
+					d.showRecentClockIns = true;
+					d.showRecentTransactions = false;
+					d.showUserStandings = false;
+				}
+			};
+
+			d.toggleUserStandings = function() {
+				if (!d.showUserStandings) {
+					d.showUserStandings = true;
+					d.showRecentClockIns = false;
+					d.showRecentTransactions = false;
+				}
+			};
+
+
+			/* Local functions */
+
+			
 /*
 			dash.timeentries = [];
 			dash.totalTime = {};
