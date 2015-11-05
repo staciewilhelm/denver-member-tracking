@@ -44,6 +44,13 @@ TODO:
 	[] view practice/clockin history
 	[] send activation email
 
+• Member list
+	[] button to create new user
+	[] modals
+			[] transactions
+			[] practice/clockin history
+			[] view member details
+	[] coaches/captains view their skaters
 
 notes:
 

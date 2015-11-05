@@ -4,18 +4,20 @@
 
 	angular
 		.module('denverTracking')
-		.controller('ModalCtrl', ['$modalInstance', ModalCtrl]);
+		.controller('Modal', Modal);
 
-		function ModalCtrl($modalInstance) {
+		function Modal(_, $scope, $modalInstance, items, team, clockins) {
 			var mod = this;
 
-			mod.items = ['hello', 'yeah', 'ok'];
-			mod.selected = {
-			  item: mod.items[0]
-			};
+			mod.team = team.name;
+
+			mod.tabs = [];
+			_.each(clockins, function(clockin, qtr) {
+				mod.tabs.push({title: 'Quarter '+qtr, clockin: clockin});
+			});
 
 			mod.ok = function () {
-			  $modalInstance.close(mod.selected.item);
+			  $modalInstance.close();
 			};
 
 			mod.cancel = function () {

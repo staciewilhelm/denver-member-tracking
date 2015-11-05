@@ -19,7 +19,7 @@
 						</div>
 					@endif
 
-					<form class="form-horizontal" role="form" method="POST" action="/auth/login">
+					<form class="member-login form-horizontal" role="form" method="POST" action="/auth/login">
 						<input type="hidden" name="_token" value="[[ csrf_token() ]]">
 
 						<!-- <div class="form-group">
@@ -55,11 +55,9 @@
 
 						<div class="form-group">
 							<div class="col-md-6 col-md-offset-4">
-								<button type="submit" class="btn btn-primary" style="margin-right: 15px;">
-									Login
-								</button>
-
-								<a href="/password/email">Forgot Your Password?</a>
+								<button type="submit" class="btn btn-primary">Login</button>
+								<button type="button" class="btn btn-primary">Forgot Your Password?</button>
+								<!-- <a href="/password/email">Forgot Your Password?</a> -->
 							</div>
 						</div>
 					</form>

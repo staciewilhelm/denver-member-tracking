@@ -54,8 +54,10 @@
 
 		</div><!-- /.member-sidebar -->
 
-		<div ng-if="d.showPracticeHistory" class="member-sidebar practice-history">
-			<h3>Practice History</h3>
+		<div ng-if="d.showRecentClockIns" class="member-sidebar practice-history">
+			<h3>Recent Clock-ins</h3>
+			<p><span class="warning">late clock-in / invalid practice</span></p>
+			<p><i class="fa fa-check"></i> = on-time clock-in | <i class="fa fa-times"></i> = excused clock-in</p>
 
 			<div class="table-responsive">
 				<table class="table table-hover">
@@ -65,137 +67,25 @@
 							<th>Type</th>
 							<th>Title</th>
 							<th>Date</th>
+							<th>&nbsp;</th>
 						</tr>
 					</thead>
 					<tbody>
-
-						<tr>
-							<td>3</td>
-							<td>Scrimmage</td>
-							<td>MHC vs Fight Club</td>
-							<td>8/19/15</td>
+						<tr ng-repeat="c in d.userClockins" ng-class="{'invalid': c.invalid}">
+							<td>{{c.qtr}}</td>
+							<td>{{c.type | capitalize}}</td>
+							<td>{{c.calendar_name}}</td>
+							<td>{{c.calendar_date | date:'M/dd/yy'}}</td>
+							<td class="center"><i class="fa" ng-class="{'fa-times': c.late_clockin, 'fa-check': !c.late_clockin}"></i></td>
 						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>8/17/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>8/14/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Scrimmage</td>
-							<td>MHC vs World</td>
-							<td>8/12/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>8/10/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>8/07/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Scrimmage</td>
-							<td>MHC vs World</td>
-							<td>8/05/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>8/03/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Scrimmage</td>
-							<td>MHC vs World</td>
-							<td>7/29/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>7/27/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>7/24/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Scrimmage</td>
-							<td>B&amp;W Scrimmage</td>
-							<td>7/22/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>7/20/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>7/27/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Scrimmage</td>
-							<td>MHC vs World</td>
-							<td>7/15/15</td>
-						</tr>
-
-						<tr style="background-color:#c00 !important;">
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>7/13/15</td>
-						</tr>
-
-						<tr>
-							<td>3</td>
-							<td>Practice</td>
-							<td>MHC</td>
-							<td>7/10/15</td>
-						</tr>
-
 					</tbody>
 				</table>
 			</div>
 
 			<br clear="all" />
 
-		</div><!-- /.practice-history -->
-		
+		</div><!-- /.member-sidebar clockins -->
+
 	</div>
 	<!-- /#sidebar-wrapper -->
 
@@ -206,11 +96,11 @@
 
 				<div class="row">
 					<div class="col-lg-12">
-
+<!-- 
 					@foreach ($user->teams as $team)
 					[[$team]]
 					@endforeach
-
+ -->
 						<h1>Welcome back, {{d.user.first_name}} {{d.user.last_name}}!</h1>
 
 						<div class="row">
@@ -289,6 +179,12 @@
 									<p><a href="{{d.gURLs.contacts}}" target="_blank">DRD Contacts</a></p>
 									<p><a href="#" target="_blank">Sponsorships &amp; Discounts</a></p>
 									<p><a href="{{d.gURLs.groupsSearch}}" target="_blank">Google Groups</a></p>
+									<div class="modal-links" ng-if="d.teamClockinsStandings.length > 0">
+										<p ng-repeat="tcr in d.teamClockinsStandings track by $index">
+											<a href="#" ng-click="d.modalOpen('clockins-standings', tcr.id); $event.preventDefault();">{{tcr.name}} Clockins/Standings</a>
+										</p>
+									</div>
+
 								</div>
 
 								<!-- <div class="dash-panel panel panel-default">
@@ -437,13 +333,13 @@
 					</div><!-- /.col-lg-8 requirement counts -->
 					
 					<div class="col-lg-4">
-						<button class="btn btn-default" ng-class="{'btn-primary': !d.showTransactions}" ng-click="d.toggleMemberSidebar()">
-							<span ng-if="!d.showTransactions">View</span><span ng-if="d.showTransactions">Hide</span>
+						<button class="btn btn-default" ng-class="{'btn-primary': !d.showAccountInfo}" ng-click="d.toggleTransactions()">
+							<span ng-if="!d.showAccountInfo">View</span><span ng-if="d.showAccountInfo">Hide</span>
 							Update Account / New Venmo Payment
 						</button>
 						<br clear="all" /><br />
-						<button class="btn btn-default" ng-class="{'btn-primary': !d.showPracticeHistory}" ng-click="d.practiceHistory()">
-							<span ng-if="!d.showPracticeHistory">View</span><span ng-if="d.showPracticeHistory">Hide</span> Logged Practices
+						<button class="btn btn-default" ng-class="{'btn-primary': !d.showRecentClockIns}" ng-click="d.toggleRecentClockins()">
+							<span ng-if="!d.showRecentClockIns">View</span><span ng-if="d.showRecentClockIns">Hide</span> Logged Practices
 						</button>
 
 					</div><!-- /.col-lg-4 -->
@@ -453,11 +349,11 @@
 		</div><!-- /.container-fluid -->
 	</div><!-- /#page-content-wrapper -->
 
+	<script type="text/ng-template" id="practiceHistory">
+		@include('modals.practice-history')
+	</script>
+
 </div>
 <!-- /#wrapper -->
 @endsection
-
-
-
-
 

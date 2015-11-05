@@ -78,17 +78,15 @@ class MemberController extends Controller {
 
 		$isCaptain = $user->teams()->where('is_captain', 1)->first();
 		$isCoach = $user->teams()->where('is_coach', 1)->first();
-		
+
+		$teamClockinsStandings = null;
 		if (!empty($isCaptain) || !empty($isCoach)) {
 
 			// get users in team
 
-			$usersStandings = $this->usersQuarterRequirements($user->teams);
-
-			dd($usersStandings);
+			$user->teamClockinsStandings = $this->usersQuarterRequirements($user->teams);
+			//dd($usersStandings);
 		}
-
-
 
 		return view('dashboard')->with(compact('user', 'committees', 'positions', 'requirements', 'teams', 'groups', 'roles'));
 
@@ -287,6 +285,11 @@ class MemberController extends Controller {
 			$groups = Group::orderBy('name')->get();
 			$roles = Role::orderBy('name')->get();
 
+			/*
+			on create, make sure a user_requirements record exists
+
+			*/
+
 			return view('members.edit')->with(compact('user', 'committees', 'positions', 'requirements', 'teams', 'groups', 'roles'));
 
 		} // end request->isPut
@@ -339,6 +342,8 @@ class MemberController extends Controller {
 	}
 
 	protected function usersQuarterRequirements($loggedUsersTeams) {
+		$finalReqs = array();
+
 		// setup queries for captains/coaches
 		$teamIds = array();
 		foreach ($loggedUsersTeams as $team) {
@@ -347,6 +352,25 @@ class MemberController extends Controller {
 
 		// get all the base requirements
 		$allBaseReqs = $this->currentYearBaseReqs($teamIds, array($this->currentQtr(), ($this->currentQtr() - 1)));
+
+		//dd($allBaseReqs);
+
+		// set all team base requirements
+		$teamBaseReqs = array();
+		foreach ($allBaseReqs as $key => $req) {
+			$team = empty($req->team_id) ? 'League' : $req->team_id;
+			$teamBaseReqs[$team][$req->quarter] = $req;
+
+			if (!empty($req->team_id)) {
+				if (!isset($finalReqs[$req->team_id])) $finalReqs[$req->team_id] = array();
+				$finalReqs[$req->team_id][$req->quarter] = array();
+			}
+		}
+
+		//dd($finalReqs);
+
+		//dd($teamBaseReqs);
+
 		// calculate the base requirements for a user per the league/teams they're on
 		$calcBaseReqs = $this->calculateUserBaseReqs($allBaseReqs);
 
@@ -361,6 +385,8 @@ class MemberController extends Controller {
 
 		// query all the users that are within the user teams
 		$rawUserTeams = DB::table('users_teams')
+			->select('users_teams.*', 'users.skater_name', 'users.first_name')
+			->leftJoin('users', 'users.id', '=', 'users_teams.user_id')
 			->whereRaw('team_id IN ('.implode(',', $teamIds).')')
 			->get();
 
@@ -368,81 +394,132 @@ class MemberController extends Controller {
 
 		//dd($userTeams);
 
-		$users = $userIds = array();
+		$teams = $unsortedUsers = $userIds = array();
 		foreach ($userTeams as $user) {
-			$users[$user->team_id][$user->user_id] = $user;
-			$userIds[] = $user->user_id;
+			if (isset($unsortedUsers[$user->user_id])) {
+				$unsortedUsers[$user->user_id]->teams[] = $user->team_id;
+			} else {
+				$user->teams = array($user->team_id);
+				$user->name = is_null($user->skater_name) ? $user->first_name : $user->skater_name;
+				unset($user->first_name, $user->skater_name);
+				$unsortedUsers[$user->user_id] = $user;
+			}
+
+			$teams[$user->team_id][$user->user_id] = $user;
+			if (!in_array($user->user_id, $userIds)) $userIds[] = $user->user_id;
+		}
+
+
+		$sortArray = array(); 
+		foreach ($unsortedUsers as $user) { 
+			foreach ($user as $key=>$value) {
+				if (!isset($sortArray[$key])) $sortArray[$key] = array(); 
+				$sortArray[$key][] = $value; 
+			}
+		} 
+
+		array_multisort($sortArray['name'],SORT_ASC,$unsortedUsers); 
+
+		//dd($unsortedUsers);
+
+		$users = array();
+		foreach ($unsortedUsers as $key => $user) {
+			$users[$user->user_id] = $user;
 		}
 
 		//dd($users);
 
 		// query all users, associated to logged in user's teams, custom user requirements
 		$rawUserReqs = DB::table('user_requirements AS userReqs')
+			->select(DB::raw('userReqs.*, users.first_name, users.last_name, users.email, users.skater_name,
+				(SELECT type FROM user_standings WHERE 
+					user_standings.user_id = userReqs.user_id AND (end_date IS NULL OR end_date > NOW())
+					ORDER BY end_date DESC limit 1
+				) as standing'))
+			->leftJoin('users', 'users.id', '=', 'userReqs.user_id')
 			->whereRaw('userReqs.user_id IN ('.implode(',', $userIds).') 
 					AND userReqs.quarter IN ('.($this->currentQtr().','.($this->currentQtr() - 1)).')')
+			->orderBy('users.skater_name')
 			->get();
 
 		$userReqs = Collection::make($rawUserReqs);
 
-		dd($userReqs);
+		//dd($userReqs);
 
 		$formattedUserReqs = array();
 		foreach ($userReqs as $key => $userReq) {
-			$formattedUserReqs[$userReq->quarter][] = $userReq;
+			$formattedUserReqs[$userReq->quarter][$userReq->user_id] = $userReq;
 		}
 
-		//dd($userReqs);
+		//dd($formattedUserReqs);
+
+		// each user should have at least one user_requirements record for the active quarter
+		// in which their user record was created. null values mean there is no set requirements
+		// at a user level, so the default would be the team OR at the minimum, the league
+		// requirements
+
+		$debug = false;
 
 		// loop through user requirements and calculated 
-		$finalReqs = array();
-
-
+		// teams -> quarter -> user -> count/requirements
 		foreach ($formattedUserReqs as $qtr => $qtrUserReq) {
 			foreach ($qtrUserReq as $userReq) {
+
+				//var_dump($userReq);
+				//echo '<br /><br />';
 
 				foreach ($types as $type) {
 					$req = 'min_'.$type;
 					$count = $type.'_count';
 
-					echo '<br />';
-					echo 'the type: '.$type.'<br />';
-					echo 'base req: '.$userBaseReqs[$userReq->quarter][$type].'<br />';
-					echo 'user req: '.$userReq->$req.'<br />';
-					echo 'user count: '.$userReq->$count.'<br />';
-					echo '<br />';
-				}
+					if ($debug) {
+						echo '<br />';
+						echo 'the user: '.$userReq->user_id.'<br />';
+						echo 'the type: '.$type.'<br />';
+						echo 'the qtr: '.$userReq->quarter.'<br /> ------- <br />';
+						echo 'user req: '.$userReq->$req.'<br /> ------- <br />';
+					}
 
-			}
+					// if the user requirement is null, go on to league requirements
+					// if NOT null, use the user requirements
+					$remaining = 0;
+					foreach ($users[$userReq->user_id]->teams as $key => $team_id) {
+						$remaining = $teamBaseReqs[$team_id][$userReq->quarter]->$type;
+						if (!is_null($userReq->$req)) $remaining = $userReq->$req;
 
-			
+						if (!isset($finalReqs[$team_id][$userReq->quarter][$userReq->user_id]['user'])) {
+							$finalReqs[$team_id][$userReq->quarter][$userReq->user_id]['user'] = array(
+								'first_name' => $userReq->first_name,
+								'last_name' => $userReq->last_name,
+								'skater_name' => $userReq->skater_name,
+								'email' => $userReq->email,
+								'standing' => (is_null($userReq->standing) ? 'Active' : $userReq->standing),
+							);
+						}
 
-		}
+						// set standing based on QUARTER
 
-		foreach ($userReqs as $user) {
+						$finalReqs[$team_id][$userReq->quarter][$userReq->user_id][$type] = array('attended'=>$userReq->$count, 'remaining'=>$remaining);
 
-			/*$eachTeam = explode(', ', $user->teams);
-			// loop through each user's teams
-			foreach ($eachTeam as $userTeam) {
-				// get the base requirements for this team
-				echo 'team name: '.$userTeam.'<br />';
-				var_dump($allTeamsReqs[$userTeam]);
-				// compare to the user's requirements
+						if ($debug) echo 'team '.$team_id.' req: '.$teamBaseReqs[$team_id][$userReq->quarter]->$type.'<br />';
+					}
 
-				var_dump($userReqs[$userTeam]);
-				echo '<br /><br />';
-				var_dump($user);
-				echo '<br /><br />';
+					if ($debug) {
+						echo 'league req: '.$teamBaseReqs['League'][$userReq->quarter]->$type.'<br /> ------- <br />';
+						echo 'base req: '.$baseReqs[$userReq->quarter][$type].'<br />';
+						echo '----<br />user count/attended: '.$userReq->$count.'<br />';
+						echo '<br />';
+					}
 
-				//$finalReqs[$userTeam][] = $user;
-			}
-			*/
+				} // foreach type
 
+			} // foreach userreq
 
-		}
+		} // foreach formatteduserreq
 
-		dd('fin');
+		//dd($finalReqs);
 
-		//return
+		return $finalReqs;
 	}
 
 	protected function calculateUserBaseReqs($allBaseReqs) {

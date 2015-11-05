@@ -6,7 +6,7 @@
 		.module('denverTracking')
 		.controller('Dashboard', Dashboard);
 
-		function Dashboard(_, $scope, core, calcReqs) {
+		function Dashboard(_, $scope, core, $modal, $log, calcReqs) {
 
 			var d = this;
 
@@ -37,6 +37,8 @@
 			d.setUserData = function(userData) {
 				d.user = userData;
 
+				d.user.teamClockinsStandings
+
 				/*d.roleId = userData.role_id;
 				d.groupId = userData.group_id;*/
 
@@ -58,7 +60,7 @@
 				d.isTransfer = userData.is_transfer;*/
 			};
 
-			d.setUserBelongsData = function(userClockins, userStandings, userTransactions) {
+			d.setUserBelongsData = function(userClockins, userStandings, userTransactions, teamClockinsStandings) {
 				// set quarter for each clockin
 				d.userClockins = [];
 
@@ -139,36 +141,56 @@
 				d.teams = [];
 				d.coachTeams = [];
 				d.captainTeams = [];
+				d.teamClockinsStandings = [];
 				_.each(teams, function(p) {
 					if (p.pivot.is_coach) d.coachTeams.push(p.name);
 					if (p.pivot.is_captain) d.captainTeams.push(p.name);
+					if (p.pivot.is_captain || p.pivot.is_coach) d.teamClockinsStandings.push(p);
 					d.teams.push({name:p.name});
 				});
-
 			};
 
+			/* Modal */
+			d.modalOpen = function (type, teamId) {
+				var modalInstance = $modal.open({
+					backdrop: false,
+					scope: $scope,
+					templateUrl: 'practiceHistory',
+					controller: 'Modal',
+					controllerAs: 'mod',
+					size: 'lg',
+					resolve: {
+						items: function () {
+							return ['HI', 'hola', 'yo'];
+						},
+						team: function () {
+							return _.findWhere(d.teamClockinsStandings, {id:teamId});
+						},
+						clockins: function () {
+							return d.user.teamClockinsStandings[teamId];
+						}
+					}
+				});
+
+				modalInstance.result.then(function (selectedItem) {
+					$scope.selected = selectedItem;
+				}, function () {
+					$log.info('Modal dismissed at: ' + new Date());
+				});
+		  };
+
 			/* Toggle Sidebar Data */
-			d.toggleRecentTransactions = function() {
-				if (!d.showRecentTransactions) {
-					d.showRecentTransactions = true;
+			d.toggleTransactions = function() {
+				if (!d.showAccountInfo) {
+					d.showAccountInfo = true;
 					d.showRecentClockIns = false;
-					d.showUserStandings = false;
 				}
 			};
 
 			d.toggleRecentClockins = function() {
 				if (!d.showRecentClockIns) {
 					d.showRecentClockIns = true;
-					d.showRecentTransactions = false;
-					d.showUserStandings = false;
-				}
-			};
-
-			d.toggleUserStandings = function() {
-				if (!d.showUserStandings) {
-					d.showUserStandings = true;
-					d.showRecentClockIns = false;
-					d.showRecentTransactions = false;
+					d.showAccountInfo = false;
 				}
 			};
 
@@ -294,6 +316,5 @@
 			}
 */
 		}
-
 
 })();

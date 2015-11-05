@@ -280,9 +280,15 @@ p span.dashboard-warning,
 
 
 
-#page-wrapper.dashboard, 
+#page-wrapper.dashboard,
 #page-wrapper form {
 	margin-top: 50px;
+}
+
+
+form.clock-in {
+	margin-top: 50px;
+	vertical-align: center;
 }
 
 
@@ -681,9 +687,31 @@ button.btn-primary.selected {
 	height: auto;
 }
 
+form.member-login .btn {
+	padding: 5px;
+	width: auto;
+	margin-right: 15px;
+}
+
 
 button.btn-inline {margin-left:15px;}
+
+div.modal-links {
+	border-top: 1px solid #7f7e7e;
+	padding-top: 5px;
+}
 
 #sidebar-wrapper .table-hover > tbody > tr:hover {
   background-color: #444;
 }
+
+/* Modals */
+.modal-table table > tbody > tr > td > span.invalid {
+	background-color:#c00 !important;
+	font-weight: bold;
+	color: #fff;
+	margin: 0;
+	padding: 4px;
+	background-color: #c00;
+}
+
