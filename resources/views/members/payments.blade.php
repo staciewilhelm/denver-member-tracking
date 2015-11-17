@@ -8,7 +8,7 @@
 
 			<div class="row">
 				<div class="col-lg-12">
-					<h1>Member PAYMENTSSSSSSSSSS</h1>
+					<h1>Member Dashboard</h1>
 					<h2>Welcome back, [[Auth::user()->first_name]] [[Auth::user()->last_name]]!</h2>
 				</div>
 				<!-- /.col-lg-12 -->

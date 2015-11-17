@@ -25,7 +25,7 @@
 	<![endif]-->
 </head>
 <body>
-	<nav class="navbar navbar-default">
+	<nav class="navbar navbar-default" ng-controller="Navigation as nav">
 		<div class="container-fluid">
 			<div class="navbar-header">
 				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -40,16 +40,16 @@
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 				<ul class="nav navbar-nav">
 				@if (Auth::guest())
-					<li><a href="/">Clock-In</a></li>
-					<li><a href="/waiver">Waiver</a></li>
+					<li ng-class="{'active': nav.activeUrl === 'clock-in'}"><a href="/clock-in">Clock-In</a></li>
+					<li ng-class="{'active': nav.activeUrl === 'waiver'}"><a href="/waiver">Waiver</a></li>
 				@else
-					<li><a href="/"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
+					<li ng-class="{'active': nav.activeUrl === 'dashboard'}"><a href="/"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
 					@if (Auth::user()->have_role->name !== 'Member')
-					<li><a href="/members"><i class="fa fa-user fa-fw"></i> Member Manager</a></li>
-					<li><a href="/payments"><i class="fa fa-file-text-o fa-fw"></i></i> Venmo Transactions</a></li>
+					<li ng-class="{'active': nav.activeUrl === 'members'}"><a href="/members"><i class="fa fa-user fa-fw"></i> Member Manager</a></li>
+					<!-- <li><a href="/payments"><i class="fa fa-file-text-o fa-fw"></i></i> Venmo Transactions</a></li> -->
 					<!-- <li><a href="/members/sync"><i class="fa fa-refresh fa-fw"></i></i> Sync Members</a></li> -->
-					<li><a href="/payments/create"><i class="fa fa-credit-card fa-fw"></i></i> New Venmo Charge</a></li>
-					<li><a href="/reports"><i class="fa fa-file-text-o fa-fw"></i></i> Reporting</a></li>
+					<!-- <li><a href="/payments/create"><i class="fa fa-credit-card fa-fw"></i></i> New Venmo Charge</a></li> -->
+					<!-- <li><a href="/reports"><i class="fa fa-file-text-o fa-fw"></i></i> Reporting</a></li> -->
 					@endif
 				@endif
 				</ul>
@@ -95,15 +95,18 @@
   -->
 
 	<script src="/js/app.js"></script>
+
 	<script src="/js/controllers/ClockIn.js"></script>
 	<script src="/js/controllers/Dashboard.js"></script>
 	<script src="/js/controllers/Member.js"></script>
 	<script src="/js/controllers/Modal.js"></script>
+	<script src="/js/controllers/Navigation.js"></script>
 
 	<script src="/js/services/core.js"></script>
 	<script src="/js/services/calculate-requirements.js"></script>
 
 	<script src="/js/services/clockin.js"></script>
+	<script src="/js/services/events.js"></script>
 	<script src="/js/services/user.js"></script>
 
 	<script src="/js/filters/capitalize.js"></script>

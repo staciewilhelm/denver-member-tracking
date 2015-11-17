@@ -11,11 +11,15 @@ use Illuminate\Http\Request;
 class UsersController extends Controller {
 
 	// Gets all users in the users table and returns them
-	public function index()
-	{
-		$users = User::all();
+	public function users() {
+		return null;
+		/*$users = User::lists();
+		return $users;*/
+	}
 
-		return $users;
+	public function clockNumbers() {
+		$clockNumbers = User::lists('clock_number');
+		return $clockNumbers;
 	}
 
 }

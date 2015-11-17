@@ -37,7 +37,7 @@
 			d.setUserData = function(userData) {
 				d.user = userData;
 
-				d.user.teamClockinsStandings
+				//d.user.teamClockinsStandings
 
 				/*d.roleId = userData.role_id;
 				d.groupId = userData.group_id;*/
@@ -60,7 +60,7 @@
 				d.isTransfer = userData.is_transfer;*/
 			};
 
-			d.setUserBelongsData = function(userClockins, userStandings, userTransactions, teamClockinsStandings) {
+			d.setUserBelongsData = function(userClockins, userStandings, userTransactions) {
 				// set quarter for each clockin
 				d.userClockins = [];
 

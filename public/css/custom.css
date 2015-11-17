@@ -286,9 +286,22 @@ p span.dashboard-warning,
 }
 
 
-form.clock-in {
-	margin-top: 50px;
+div.landing .content {
+	margin: 75px auto 0 auto;
+	width: 50%;
 	vertical-align: center;
+}
+
+div.landing .content h1 {text-align: center;}
+
+.clock-in {
+	margin: 75px auto 0 auto;
+	width: 50%;
+	vertical-align: center;
+}
+
+.clock-in .clock-number.invalid {
+	border: 2px solid #c00;
 }
 
 
@@ -706,6 +719,21 @@ div.modal-links {
 }
 
 /* Modals */
+.modal-content {
+	max-height: 500px;
+	overflow: scroll;
+}
+
+.modal-table.team-users-clockins th,
+.modal-table.team-users-clockins td {
+	text-align: center;
+}
+
+.modal-table.team-users-clockins th.lft,
+.modal-table.team-users-clockins td.lft {
+	text-align: left;
+}
+
 .modal-table table > tbody > tr > td > span.invalid {
 	background-color:#c00 !important;
 	font-weight: bold;

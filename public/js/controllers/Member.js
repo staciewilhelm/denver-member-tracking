@@ -4,7 +4,44 @@
 
 	angular
 		.module('denverTracking')
+		.controller('MemberMngr', MemberMngr)
 		.controller('Member', Member);
+
+		function MemberMngr(_, $scope, $log, core, calcReqs) {
+			var mMngr = this;
+
+			mMngr.setUserData = function(userData) {
+				mMngr.users = userData;
+			};
+
+			mMngr.predicate = ['last_name', 'first_name'];
+			mMngr.predicateIsName = true;
+			var ToggleData = function(selected, current) {
+
+				if ((selected === 'name') && (typeof current === 'object')) {
+					mMngr.predicateIsName = true;
+					if (current[0].indexOf('-') === -1) {
+						return ['-last_name', 'first_name'];
+					} else {
+						return ['last_name', 'first_name'];
+					}
+				} else {
+					mMngr.predicateIsName = false;
+					if (current === selected && current.indexOf('-') === -1) {
+						return '-'+selected;
+					} else {
+						return selected;
+					}
+				}
+
+			};
+
+			mMngr.toggleSort = function(selected) {
+				mMngr.predicate = ToggleData(selected, mMngr.predicate);
+			}
+
+
+		}
 
 		function Member(_, $scope, $log, core, calcReqs) {
 

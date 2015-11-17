@@ -28,10 +28,37 @@ class GoogleController extends Controller {
 	 *
 	 * @return void
 	 */
-	public function __construct()
-	{
-		$this->middleware('auth');
+	public function __construct() {
+
 	}
+
+	/**
+	 * Syncs the local database with the current Google Directory
+	 * of all Denver skaters
+	 *
+	 * @param App\Services\GoogleCalendar   $calendar
+	 * @return Response array
+	 */
+	public function upcomingEvents(GoogleCalendar $calendar) {
+		$eventList = $mergedList = [];
+
+		$events = $calendar->getMergedEvents();
+		if (!empty($events)) {
+			$formatted = $calendar->formatEventData($events);
+			$startDates = $formatted['dates'];
+			$events = $formatted['events'];
+
+			$mergedList = $events;
+			array_multisort($startDates, SORT_DESC, $mergedList);
+			//dd($mergedList);
+		}
+
+		foreach ($mergedList as $key => $e) {
+			$eventList[$e['group']][] = array('display'=>$e['display'], 'date'=>$e['group']);
+		}
+		return $eventList;
+	}
+
 
 	/**
 	 * Syncs the local database with the current Google Directory
@@ -42,28 +69,27 @@ class GoogleController extends Controller {
 	 * @param App\Services\MemberDataParser  $directory
 	 * @return Response
 	 */
-	public function sync(Request $request, GoogleDirectory $directory, MemberDataParser $parser)
-	{
-
+	public function sync(Request $request, GoogleDirectory $directory, MemberDataParser $parser) {
+		$this->middleware('auth');
 		$method = $request->method();
 
-if ($request->isMethod('post')) {
-    //
-	$input = $request->all();
-	var_dump('the post!', $input);
+		if ($request->isMethod('post')) {
+		    //
+			$input = $request->all();
+			var_dump('the post!', $input);
 
-	// once sync is complete, show a list of newly added members
-	// note on the list page newly added members (use the star?)
-} else {
-	//var_dump('the get!');
-}
+			// once sync is complete, show a list of newly added members
+			// note on the list page newly added members (use the star?)
+		} else {
+			//var_dump('the get!');
+		}
 
 		return view('members.sync');
 	}
 
 
 
-	public function calendar(GoogleCalendar $calendar)
+/*	public function calendar(GoogleCalendar $calendar)
 	{
 
     $calendarId = 'denverrollerdolls.org_cc37m0abv3pplm5qiocsi09ock@group.calendar.google.com';
@@ -107,7 +133,7 @@ if ($request->isMethod('post')) {
         // return to google login url
         return redirect((string)$url);
     }
-}
+}*/
 
 
 }

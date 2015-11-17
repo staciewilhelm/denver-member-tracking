@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Members;
 use App\Http\Controllers\Controller;
 use App\Services\GoogleCalendar;
 use App\Services\GoogleDirectory;
+use App\Services\Venmo;
+use Illuminate\Routing\Router;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use DateTime;
+
+
+
 
 use DB;
 
@@ -27,7 +32,7 @@ class MemberController extends Controller {
 	| Member Controller
 	|--------------------------------------------------------------------------
 	|
-	| This controller does a lot of stuff
+	| The base for most of the DRD Tracking system
 	|
 	*/
 
@@ -36,10 +41,13 @@ class MemberController extends Controller {
 	 *
 	 * @return void
 	 */
-	public function __construct()
-	{
+	public function __construct() {
 		$this->middleware('auth');
 	}
+
+/**
+ * Member Methods
+ */
 
 	/**
 	 * Returns an array of merged events from both the
@@ -76,16 +84,18 @@ class MemberController extends Controller {
 		$groups = Group::orderBy('name')->get();
 		$roles = Role::orderBy('name')->get();
 
+		// determine whether the authenticated user is the captain / coach of a team
 		$isCaptain = $user->teams()->where('is_captain', 1)->first();
 		$isCoach = $user->teams()->where('is_coach', 1)->first();
 
 		$teamClockinsStandings = null;
+		// if they are, grab all related users attendance / standings for roster decisions
 		if (!empty($isCaptain) || !empty($isCoach)) {
 
 			// get users in team
 
 			$user->teamClockinsStandings = $this->usersQuarterRequirements($user->teams);
-			//dd($usersStandings);
+			//dd($user->teamClockinsStandings);
 		}
 
 		return view('dashboard')->with(compact('user', 'committees', 'positions', 'requirements', 'teams', 'groups', 'roles'));
@@ -97,8 +107,7 @@ class MemberController extends Controller {
 	 *
 	 * @return array
 	 */
-	public function loggedPractices()
-	{
+	public function loggedPractices() {
 
 		var_dump(\Auth::user()->id);
 		$user = User::where('id', \Auth::user()->id)->first();
@@ -112,31 +121,24 @@ class MemberController extends Controller {
 	 *
 	 * @return array
 	 */
-	public function loggedActivities()
-	{
+	public function loggedActivities() {
 
 		return view('logged.activities');
 	}
 
-	/**
-	 * Return logged Venmo payments for logged in member
-	 *
-	 * @return array
-	 */
-	public function loggedPayments()
-	{
 
-		return view('logged.payments');
-	}
 
 	/**
 	 * Return data for all members within the system
 	 *
 	 * @return array
 	 */
-	public function getMembers() {
+	public function getMembers(Router $router) {
+		$uri = $router->getCurrentRoute()->uri();
+
 		$users = User::whereRaw('id != 1')->orderBy('created_at')->get();
-		return view('members.list', compact('users'));
+
+		return view('members.list', compact('uri', 'users'));
 	}
 
 	/**
@@ -145,20 +147,8 @@ class MemberController extends Controller {
 	 * @param number  $account_id
 	 * @return array
 	 */
-	public function view($account_id)
-	{
+	public function view($account_id) {
 		return view('members.view');
-	}
-
-	protected function formatDateTime($date, $dateType = 'date', $dataType = 'save') {
-		if ($dataType === 'save') {
-			$filteredDate = new DateTime($date);
-
-			if ($type === 'datetime') return $filteredDate->format('Y-m-d H:i:s');
-			if ($type === 'date') return $filteredDate->format('Y-m-d');
-		}
-
-		if ($dataType === 'display') return date('U', strtotime($date)) * 1000;
 	}
 
 	/**
@@ -170,9 +160,6 @@ class MemberController extends Controller {
 	 */
 
 	public function edit($account_id, Request $request) {
-
-
-
 		/*
 		// grab clockins for admins
 		$team_ids = array();
@@ -295,6 +282,57 @@ class MemberController extends Controller {
 		} // end request->isPut
 
 	} // end edit
+
+/**
+ * Payment Methods
+ */
+
+	/**
+	 * Return Venmo Authorization Token based on returned code
+	 *
+	 * @return array
+	 */
+	public function authorized(Request $request, Venmo $venmo) {
+
+		$result = $venmo->accessToken($request->code);
+		$response = json_decode($result);
+
+		// set token and refresh token in session
+		$request->session()->put('vToken', $response->access_token);
+		$request->session()->put('vRefreshToken', $response->refresh_token);
+
+		return redirect('payments');
+	}
+
+	/**
+	 * Return all transactions for @denverrollerderby
+	 *
+	 * @return array
+	 */
+	public function transactions(Request $request, Venmo $venmo) {
+
+		$result = $venmo->getPayments($request->session()->get('vToken'));
+		$response = json_decode($result);
+
+		dd($response);
+
+		return view('members.payments');
+	}
+
+/**
+ * Protected functions
+ */
+
+	protected function formatDateTime($date, $dateType = 'date', $dataType = 'save') {
+		if ($dataType === 'save') {
+			$filteredDate = new DateTime($date);
+
+			if ($dateType === 'datetime') return $filteredDate->format('Y-m-d H:i:s');
+			if ($dateType === 'date') return $filteredDate->format('Y-m-d');
+		}
+
+		if ($dataType === 'display') return date('U', strtotime($date)) * 1000;
+	}
 
 	protected function currentQtr() {
 		$n = date('n');
@@ -498,7 +536,6 @@ class MemberController extends Controller {
 						}
 
 						// set standing based on QUARTER
-
 						$finalReqs[$team_id][$userReq->quarter][$userReq->user_id][$type] = array('attended'=>$userReq->$count, 'remaining'=>$remaining);
 
 						if ($debug) echo 'team '.$team_id.' req: '.$teamBaseReqs[$team_id][$userReq->quarter]->$type.'<br />';
@@ -621,31 +658,5 @@ class MemberController extends Controller {
 
 		$standing->save();
 	}
-
-
-/*
-	Route::group(['prefix' => 'members/{account_id}'], function () {
-			// Matches the members/{account_id}/detail URL
-			Route::get('detail', 'Members\MemberController@view');
-
-			// Matches the members/{account_id}/payments URL
-			Route::get('payments', 'Members\VenmoController@payments');
-
-			// Matches the members/{account_id}/update URL
-			Route::put('update', 'Members\MemberController@edit');
-
-		});
-		// end members/{account_id} routing
-
-		// routes for member listing
-		Route::group(['prefix' => 'members'], function () {
-			// Matches the members URL
-			Route::get('/', 'Members\MemberController@list');
-
-			// Matches the members/sync URL
-			Route::get('sync', 'Members\GoogleController@sync');
-
-			// Matches the members/reports URL
-			Route::get('reports', 'Members\MemberController@reports');*/
 
 }

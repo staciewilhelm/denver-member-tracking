@@ -32,7 +32,10 @@ Blade::setEscapedContentTags('[[[', ']]]');
 
 Route::group(['prefix'=>'/'], function () {
 	Route::get('/', 'GuestController@index');
-	Route::post('/clock-in', 'GuestController@postClockin');
+
+	Route::get('/clock-in/thanks', 'GuestController@clockin');
+	Route::get('/clock-in', 'GuestController@clockin');
+	Route::post('/clock-in', 'GuestController@clockin');
 
 	Route::get('/waiver', 'GuestController@waiver');
 	Route::post('/waiver', 'GuestController@waiver');
@@ -68,11 +71,16 @@ Route::group([
 	// landing page for all members once logged in
 	Route::get('/dashboard', 'Members\MemberController@dashboard');
 
+
+/*
 	Route::get('/practices', 'Members\MemberController@loggedPractices');
 
 	Route::get('/credits', 'Members\MemberController@loggedcredits');
 
 	Route::get('/payments', 'Members\MemberController@loggedPayments');
+*/
+
+
 
 	// Admin Only routes
 	Route::group(['roles'=>'admin'], function () {
@@ -82,13 +90,16 @@ Route::group([
         // Controllers Within The "App\Http\Controllers\Admin\User" Namespace
     });
 */
+		Route::get('/payments/redirect', 'Members\MemberController@authorized');
+		Route::get('/payments', 'Members\MemberController@transactions');
+
 		// routes for a specific member
 		Route::group(['prefix' => 'members/{account_id}'], function () {
 			// Matches the members/{account_id}/detail URL
 			Route::get('details', 'Members\MemberController@view');
 
 			// Matches the members/{account_id}/payments URL
-			Route::get('payments', 'Members\VenmoController@payments');
+			Route::get('payments', 'Members\MemberController@payments');
 
 			// Matches the members/{account_id}/update URL
 			Route::get('update', 'Members\MemberController@edit');
@@ -103,8 +114,8 @@ Route::group([
 			Route::get('/', 'Members\MemberController@getMembers');
 
 			// Matches the members/sync URL
-			Route::get('sync', 'Members\GoogleController@sync');
-			Route::post('sync', 'Members\GoogleController@sync');
+			/*Route::get('sync', 'Members\GoogleController@sync');
+			Route::post('sync', 'Members\GoogleController@sync');*/
 
 		});
 		// end members routing
@@ -133,10 +144,11 @@ Route::group(['prefix' => 'api'], function () {
 	*/
 
 	Route::resource('clockins', 'UserClockinsController');
-	Route::resource('users', 'UsersController');
+	Route::resource('users', 'UsersController@users');
+	Route::resource('clockNumbers', 'UsersController@clockNumbers');
 
 	// Matches the api/practices URL
-	//Route::get('practices', 'Members\GoogleController@listPractices');
+	Route::get('upcomingEvents', 'Members\GoogleController@upcomingEvents');
 
 	// Matches the api/committees URL
 	Route::get('committees', 'DenverApiController@committees');
