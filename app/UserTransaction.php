@@ -8,7 +8,7 @@ class UserTransaction extends Model {
 	protected $table = 'user_transactions';
 
 	// An array of the fields we can fill in the time_entries table
-	protected $fillable = ['user_id', 'type', 'desc', 'amount', 'due', 'paid', 'paid_date'];
+	protected $fillable = ['user_id', 'type', 'trans_desc', 'amount', 'due', 'trans_final', 'trans_amount', 'trans_date'];
 
 	protected $hidden = ['user_id', 'created_at', 'updated_at'];
 

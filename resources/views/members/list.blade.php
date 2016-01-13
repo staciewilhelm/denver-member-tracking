@@ -6,12 +6,15 @@
 <div id="page-content-wrapper">
 	<div class="container-fluid">
 		<div id="page-wrapper" 
+			class="member-list" 
 			ng-controller="MemberMngr as mMngr"
 			ng-init="mMngr.setUserData([[$users]]);">
 
 			<div class="row">
 				<div class="col-lg-12">
-					<h1 class="page-header">Member Manager</h1>
+					<h1 class="page-header">Member Manager
+						<button type="button" class="btn btn-primary" ng-click="mMngr.redirect('/members/create')">Add Member</button>
+					</h1>
 				</div>
 				<!-- /.col-lg-12 -->
 			</div>
@@ -25,17 +28,33 @@
 									<th>Member Name
 										<span
 										class="fa"
-										ng-class="{'fa-arrow-up': !mMngr.predicateIsName || (mMngr.predicateIsName && mMngr.predicate[0].indexOf('-') === -1), 
-										'fa-arrow-down': mMngr.predicateIsName && mMngr.predicate[0].indexOf('-') > -1}" 
-										ng-click="mMngr.toggleSort('name')"></span>
+										ng-class="{
+											'fa-arrows-v': !mMngr.predicateIsName && mMngr.predicate[1].indexOf('first_name') === -1,
+											'fa-arrow-up': !mMngr.predicateIsName || (mMngr.predicateIsName && mMngr.predicate[0].indexOf('-') === -1), 
+											'fa-arrow-down': mMngr.predicateIsName && mMngr.predicate[0].indexOf('-') > -1
+										}" 
+										ng-click="mMngr.predicateIsName = true; mMngr.toggleSort('name')"></span>
 									</th>
 									<th>Derby Name / #
 										<span
 										class="fa"
-										ng-class="{'fa-arrow-up': mMngr.predicate.indexOf('-') === -1, 'fa-arrow-down': mMngr.predicate.indexOf('-') > -1}" 
-										ng-click="mMngr.toggleSort('skater_name')"></span>
+										ng-class="{
+											'fa-arrows-v': mMngr.predicate.indexOf('skater_name') === -1,
+											'fa-arrow-up': (mMngr.predicate.indexOf('skater_name') > -1) && (mMngr.predicate.indexOf('-') === -1), 
+											'fa-arrow-down': (mMngr.predicate.indexOf('skater_name') > -1) && (mMngr.predicate.indexOf('-') > -1)
+										}" 
+										ng-click="mMngr.predicateIsName = false; mMngr.toggleSort('skater_name')"></span>
 									</th>
-									<th>Denver Email</th>
+									<th>Denver Email
+										<span
+										class="fa"
+										ng-class="{
+											'fa-arrows-v': mMngr.predicate.indexOf('email') === -1,
+											'fa-arrow-up': (mMngr.predicate.indexOf('email') > -1) && (mMngr.predicate.indexOf('-') === -1), 
+											'fa-arrow-down': (mMngr.predicate.indexOf('email') > -1) && (mMngr.predicate.indexOf('-') > -1)
+										}" 
+										ng-click="mMngr.predicateIsName = false; mMngr.toggleSort('email')"></span>
+									</th>
 									<th>Alt. Email</th>
 									<th>Phone</th>
 									<th class="center">Member Type</th>
@@ -54,19 +73,23 @@
 									<td><a href="mailto:{{u.alt_email}}">{{u.alt_email}}</a></td>
 									<td>{{u.phone}}</td>
 									<td class="center">{{u.mem_type}}</td>
-									<td class="center"><i class="fa fa-check fa-fw" ng-click="toggleMin()" tooltip="Member is {{u.mem_status}}"></i></td>
 									<td class="center">
-										<!-- <i class="fa fa-warning icon-warning fa-fw" ng-click="toggleMin()" tooltip="Dues are Owed"></i> -->
-										<i class="fa fa-check fa-fw" ng-click="toggleMin()" tooltip="Dues are Current"></i>
+										<i ng-show="!u.activeStanding" class="fa fa-check fa-fw" tooltip="Member is {{u.mem_status}}"></i>
+										<i ng-show="u.activeStanding" class="fa fa-warning icon-warning fa-fw" tooltip="Member is on {{u.activeStanding}}"></i>
+									</td>
+									 
+									<td class="center">
+										<!-- <i class="fa fa-warning icon-warning fa-fw" tooltip="Dues are Owed"></i> -->
+										<i class="fa fa-check fa-fw" tooltip="Dues are Current"></i>
 									</td>
 									<td>
-										<a href="members/{{u.id}}/update" class="fa fa-pencil fa-fw" ng-click="toggleMin()" tooltip="Edit Member Details"></a>
-										&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-										<a href="members/{{u.id}}/details" class="fa fa-eye fa-fw" ng-click="toggleMin()" tooltip="View Member Details"></a>
-										&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+										<a href="members/{{u.id}}/update" class="fa fa-pencil fa-fw" tooltip="Edit Member Details"></a>
+										<!-- &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+										<a href="#" class="fa fa-eye fa-fw" ng-click="$event.preventDefault();" tooltip="View Member Details"></a>
+										&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; -->
 										<!-- <a href="members/{{u.id}}/payments" class="fa fa-money fa-fw" ng-click="toggleMin()" tooltip="Payment history (modal for coaches/captains)"></a>
 										&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; -->
-										<a href="members/{{u.id}}/practices" class="fa fa-list-alt fa-fw" ng-click="toggleMin()" tooltip="Practice history"></a>
+										<!-- <a href="#" class="fa fa-list-alt fa-fw" ng-click="mMngr.modalOpen(u.id); $event.preventDefault();" tooltip="Practice history"></a> -->
 									</td>
 								</tr>
 							</tbody>
@@ -80,6 +103,10 @@
 
 		</div>
 		<!-- /#page-wrapper -->
+
+		<script type="text/ng-template" id="practiceHistory">
+			@include('modals.practice-history')
+		</script>
 
 	</div>
 </div>

@@ -12,9 +12,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use DateTime;
 
-
-
-
+use Validator;
+use ValidationException;
 use DB;
 
 use App\User;
@@ -133,12 +132,93 @@ class MemberController extends Controller {
 	 *
 	 * @return array
 	 */
-	public function getMembers(Router $router) {
+	public function listMembers(Router $router) {
 		$uri = $router->getCurrentRoute()->uri();
 
 		$users = User::whereRaw('id != 1')->orderBy('created_at')->get();
 
+		foreach ($users as $key => $user) {
+			foreach ($user->standings as $standing) {
+				if (empty($standing->end_date)) {
+					$user->activeStanding = $standing->type;
+				}
+			}
+		}
+
 		return view('members.list', compact('uri', 'users'));
+	}
+
+	/**
+	 * Returns data for one user by id
+	 *
+	 * @param number  $account_id
+	 * @return array
+	 */
+	public function create(Request $request) {
+
+		$leagueData = $this->leagueData();
+		//$stuff = array_merge($leagueData, array('user'=>array()));
+		if ($request->isMethod('post')) {
+
+
+			/*
+			on create, make sure a user_requirements record exists
+			*/
+			//dd($request->all());
+
+
+
+
+			$postData = $request->all();
+
+			$validator = $this->validationRules('create', $postData);
+
+
+			/*'password' => bcrypt($data['password']),*/
+
+    if ($validator->fails()) {
+    	//dd(Input::all());
+      // send back to the page with the input data and errors
+      //return Redirect::to('/members/create')->withInput()->withErrors($validator);
+      //return redirect()->back()->withInput()->withErrors($validator->errors());
+      //$user = Collection::make($request->all());
+      //dd($user);
+    	//$stuff = array_merge($leagueData, array('user'=>array('first_name'=>'crap', 'last_name'=>'things', 'phone'=>'123-123-1234')));
+      //return view('members.member-info')->with($stuff)->withErrors($validator->errors());
+    	//dd($stuff);
+
+    	$user = new User();
+    	$user->fill($request->all());
+    	//dd($user->first_name);
+      //return redirect()->back()->withInput()->withErrors($validator->errors());
+
+      return array('user'=>$postData, 'errors'=>$validator->errors());
+
+      dd('ISSUE');
+    }
+    else {
+    	dd('everything looks great!');
+	   // Do your stuff here.
+      // send back to the page with success message
+      //return Redirect::to('/account/formvalidate');
+    }
+
+
+
+			/*$v = Validator::make($request->all(), [
+	        'first_name' => 'required|max:255',
+	        'last_name' => 'required',
+	    ]);
+
+	    if ($v->fails())
+	    {
+	        return redirect()->back()->withErrors($v->errors());
+	    }*/
+
+		} else {
+			return view('members.member-info')->with($leagueData);
+		}
+
 	}
 
 	/**
@@ -158,7 +238,6 @@ class MemberController extends Controller {
 	 * @param Request $request
 	 * @return array
 	 */
-
 	public function edit($account_id, Request $request) {
 		/*
 		// grab clockins for admins
@@ -262,26 +341,155 @@ class MemberController extends Controller {
 		// once sync is complete, show a list of newly added members
 		// note on the list page newly added members (use the star?)
 		} else {
-			// related tables
-			$committees = Committee::where('active', 1)->orderBy('name')->get();
-			$positions = Position::all();
-			$teams = Team::where('active', 1)->orderBy('name')->get();
+			$leagueData = $this->leagueData();
+			$data = array_merge($leagueData, array('user'=>$user));
 
-			$requirements = $this->currentYearBaseReqs();
-
-			$groups = Group::orderBy('name')->get();
-			$roles = Role::orderBy('name')->get();
-
-			/*
-			on create, make sure a user_requirements record exists
-
-			*/
-
-			return view('members.edit')->with(compact('user', 'committees', 'positions', 'requirements', 'teams', 'groups', 'roles'));
+			return view('members.member-info')->with($data);
 
 		} // end request->isPut
 
 	} // end edit
+
+	/**
+	 * Run validation rules
+	 *
+	 * @param string  $type (create, update, etc)
+	 * @param array $postData
+	 * @return array
+	 */
+	protected function validationRules($type, $postData) {
+		// setting up custom error messages for the field validation
+		$messages = [
+			// personal
+			'first_name.required' => 'Required',
+			'first_name.alpha' => 'Alpha entry only',
+			'first_name.max' => '100 characters or fewer',
+			'last_name.required' => 'Required',
+			'last_name.alpha' => 'Alpha entry only',
+			'last_name.max' => '100 characters or fewer',
+			'phone.required' => 'Required',
+			'phone.regex' => 'Invalid phone',
+			'dob.required' => 'Required',
+			'dob.date' => 'Invalid date',
+			'alt_email.required' => 'Required',
+			'alt_email.email' => 'Invalid email',
+			// account
+			'role_id.required' => 'Required',
+			'role_id.boolean' => 'Invalid selection',
+			'group_id.boolean' => 'Invalid selection',
+			'clock_number.required' => 'Required',
+			'clock_number.digits' => '4 digits',
+			'password.required_without' => 'Required',
+			'venmo_handle.required' => 'Required',
+			'venmo_handle.alpha_dash' => 'Invalid character(s)',
+			'venmo_handle.max' => '100 characters or less',
+			// league
+			'mem_status.in' => 'Invalid selection',
+			'mem_type.required_if' => 'Required for Active members',
+			'mem_type.in' => 'Invalid selection',
+			//'mem_level.required_if' => '',
+			'skater_level.required_if' => 'Required for Skater',
+			'skater_level.in' => 'Invalid selection',
+
+			// retired
+			'retired_date.required_if' => 'Required for Retired members',
+			'retired_date.date' => 'Invalid date',
+
+			// skater info
+			'skater_name.required_if' => 'Required for Active members',
+			'skater_name.alpha' => 'Alphanumeric entry',
+			'skater_name.max' => '100 characters or less',
+			'skater_no.required_if' => 'Required for Active members',
+			'skater_no.numeric' => 'Numbers only',
+			'skater_no.max' => '4 digits max',
+			'identifies_as.required_if' => 'Required for Active members',
+			'identifies_as.in' => 'Invalid selection',
+			'join_date.required_if' => 'Required for Active members',
+			'join_date.date' => 'Invalid date',
+			'induction_date.required_if' => 'Required for Active members',
+			'induction_date.date' => 'Invalid date',
+			'wftda_insurance_no.required_if' => 'Required for Active members',
+			'wftda_insurance_no.numeric' => 'Numbers only',
+			'wftda_insurance_no.max' => '6 digits max',
+
+			// league info
+			'signed_waiver.boolean' => 'Invalid input',
+			'signed_coc' => 'Invalid input',
+			'paid_mem_fee' => 'Invalid input',
+
+			// transfer
+			'is_transfer' => 'Invalid input',
+			'transfer_from.required_if' => 'Required for Transfers',
+			'transfer_date.required_if' => 'Required for Transfers',
+			'transfer_date.date' => 'Invalid date',
+		];
+
+		$rules = [
+			'first_name' => 'required|alpha',
+			'last_name' => 'required|alpha',
+			'phone' => 'required|regex:/((\(\d{3}\) ?)|(\d{3}-))?\d{3}-\d{4}/',
+
+
+			//'name'      => 'required|regex:/[XI0-9\/]+/|unique:classes'
+
+			'dob' => 'required|date',
+			'alt_email' => 'required|email|unique:users',
+			// account
+			'role_id' => 'required|boolean',
+			'group_id' => 'boolean',
+			'clock_number' => 'required|digits:4',
+			'password' => 'required_without:id|confirmed|min:6',
+			'venmo_handle' => 'required|alpha_dash|max:100',
+			// league
+			'mem_status' => 'in:Active,Suspended,Alumni,Retired,Pending',
+			'mem_type' => 'required_if:mem_status,Active|in:Skater,Volunteer,Associate',
+			//'mem_level' => 'required_if:mem_status,Active',
+			'skater_level' => 'required_if:mem_type,Skater|in:Flight School,B,A-,A',
+
+			// retired
+			'retired_date' => 'required_if:mem_status,Retired|date',
+
+			// skater info
+			'skater_name' => 'required_if:mem_status,Active|alpha|max:100',
+			'skater_no' => 'required_if:mem_status,Active|numeric|max:4',
+			'identifies_as' => 'required_if:mem_status,Active|in:Male,Female',
+			'join_date' => 'required_if:mem_status,Active|date',
+			'induction_date' => 'required_if:mem_status,Active|date',
+			'wftda_insurance_no' => 'required_if:mem_status,Active|numeric|max:6',
+
+			// league info
+			'signed_waiver' => 'required|boolean',
+			'signed_coc' => 'required|boolean',
+			'paid_mem_fee' => 'required|boolean',
+
+			// transfer
+			'is_transfer' => 'required|boolean',
+			'transfer_from' => 'required_if:is_transfer,true|alpha|max:100',
+			'transfer_date' => 'required_if:is_transfer,true|date',
+		];
+
+		// doing the validation, passing post data, rules and the messages
+		return Validator::make($postData, $rules, $messages);
+	}
+
+	protected function leagueData() {
+		$committees = Committee::where('active', 1)->orderBy('name')->get();
+		$positions = Position::all();
+		$requirements = $this->currentYearBaseReqs();
+		$teams = Team::where('active', 1)->orderBy('name')->get();
+		$groups = Group::orderBy('name')->get();
+		$roles = Role::orderBy('name')->get();
+
+		return array(
+			'committees'=>$committees, 
+			'positions'=>$positions,
+			'requirements'=>$requirements,
+			'teams'=>$teams,
+			'groups'=>$groups,
+			'roles'=>$roles,
+		);
+	}
+
 
 /**
  * Payment Methods
@@ -522,23 +730,26 @@ class MemberController extends Controller {
 					// if NOT null, use the user requirements
 					$remaining = 0;
 					foreach ($users[$userReq->user_id]->teams as $key => $team_id) {
-						$remaining = $teamBaseReqs[$team_id][$userReq->quarter]->$type;
-						if (!is_null($userReq->$req)) $remaining = $userReq->$req;
+						// only account for team base requirements IF they exist
+						if (isset($teamBaseReqs[$team_id])) {
+							$remaining = $teamBaseReqs[$team_id][$userReq->quarter]->$type;
+							if (!is_null($userReq->$req)) $remaining = $userReq->$req;
 
-						if (!isset($finalReqs[$team_id][$userReq->quarter][$userReq->user_id]['user'])) {
-							$finalReqs[$team_id][$userReq->quarter][$userReq->user_id]['user'] = array(
-								'first_name' => $userReq->first_name,
-								'last_name' => $userReq->last_name,
-								'skater_name' => $userReq->skater_name,
-								'email' => $userReq->email,
-								'standing' => (is_null($userReq->standing) ? 'Active' : $userReq->standing),
-							);
+							if (!isset($finalReqs[$team_id][$userReq->quarter][$userReq->user_id]['user'])) {
+								$finalReqs[$team_id][$userReq->quarter][$userReq->user_id]['user'] = array(
+									'first_name' => $userReq->first_name,
+									'last_name' => $userReq->last_name,
+									'skater_name' => $userReq->skater_name,
+									'email' => $userReq->email,
+									'standing' => (is_null($userReq->standing) ? 'Active' : $userReq->standing),
+								);
+							}
+
+							// set standing based on QUARTER
+							$finalReqs[$team_id][$userReq->quarter][$userReq->user_id][$type] = array('attended'=>$userReq->$count, 'remaining'=>$remaining);
+
+							if ($debug) echo 'team '.$team_id.' req: '.$teamBaseReqs[$team_id][$userReq->quarter]->$type.'<br />';
 						}
-
-						// set standing based on QUARTER
-						$finalReqs[$team_id][$userReq->quarter][$userReq->user_id][$type] = array('attended'=>$userReq->$count, 'remaining'=>$remaining);
-
-						if ($debug) echo 'team '.$team_id.' req: '.$teamBaseReqs[$team_id][$userReq->quarter]->$type.'<br />';
 					}
 
 					if ($debug) {

@@ -1,54 +1,93 @@
 (function() {
 
+	var loadedOnce = false;
+
 	'use strict';
 
 	angular
 		.module('denverTracking')
+		.directive('dataField', dataField)
+		
+		.directive('textField', textField)
+		.directive('venmoField', venmoField)
+		.directive('selectField', selectField)
+		.directive('datepickerDob', datepickerDob)
+		.directive('datepickerJoin', datepickerJoin)
+		.directive('datepickerInduction', datepickerInduction)
+		.directive('datepickerTransfer', datepickerTransfer)
+		.directive('datepickerRetired', datepickerRetired)
+		.directive('datepickerActivestandingstart', datepickerActivestandingstart)
+		.directive('datepickerActivestandingend', datepickerActivestandingend)
+		
 		.controller('MemberMngr', MemberMngr)
 		.controller('Member', Member);
 
-		function MemberMngr(_, $scope, $log, core, calcReqs) {
+		function MemberMngr(_, $scope, $window, $modal, $log, coreFns, calcReqs, user) {
 			var mMngr = this;
 
 			mMngr.setUserData = function(userData) {
+				_.each(userData, function(u) {
+					if (_.isNull(u.skater_name)) u.skater_name = '';
+				});
 				mMngr.users = userData;
 			};
 
 			mMngr.predicate = ['last_name', 'first_name'];
 			mMngr.predicateIsName = true;
-			var ToggleData = function(selected, current) {
-
-				if ((selected === 'name') && (typeof current === 'object')) {
-					mMngr.predicateIsName = true;
-					if (current[0].indexOf('-') === -1) {
-						return ['-last_name', 'first_name'];
-					} else {
-						return ['last_name', 'first_name'];
-					}
-				} else {
-					mMngr.predicateIsName = false;
-					if (current === selected && current.indexOf('-') === -1) {
-						return '-'+selected;
-					} else {
-						return selected;
-					}
-				}
-
-			};
 
 			mMngr.toggleSort = function(selected) {
-				mMngr.predicate = ToggleData(selected, mMngr.predicate);
+				mMngr.predicate = coreFns.toggle(selected, mMngr.predicate, mMngr.predicateIsName);
 			}
 
+			mMngr.redirect = function(url) {
+				$window.location.href = url;
+			}
 
-		}
+			/* Modal */
+			mMngr.modalOpen = function (userId) {
+				var modalInstance = $modal.open({
+					backdrop: false,
+					scope: $scope,
+					templateUrl: 'practiceHistory',
+					controller: 'ModalPracticeHistory',
+					controllerAs: 'mod',
+					size: 'lg',
+					resolve: {
+						user: function () {
+							return user.getUsersRequirements(userId).then(function(result) {
+								return result;
+							}, function(error) {
+								console.log(error);
+							});
+						}
+					}
+				});
 
-		function Member(_, $scope, $log, core, calcReqs) {
+				modalInstance.result.then(function (selectedItem) {
+					$scope.selected = selectedItem;
+				}, function () {
+					$log.info('Modal dismissed at: ' + new Date());
+				});
+			};
 
+		};
+
+		function Member(_, $http, $scope, $modal, $log, $timeout, coreData, calcReqs) {
 			var m = this;
+
+			m.loaded = (loadedOnce) ? true : false;
+			m.user = {};
+			m.errors = {};
+			m.action = 'create';
+			m.formAction = '/members/create';
+
+			console.log('loaded?', m.loaded);
+
+			$timeout(function() { m.loaded = true; }, 1000);
 
 			// set default values
 			m.roleId = '';
+			m.user.role_id = 3;
 			m.groupId = '';
 			m.memberStatus = '';
 			m.memberType = '';
@@ -60,29 +99,29 @@
 			m.selectedHomeTeam = null;
 			m.seletedTravelTeams = [];
 
-			m.showRecentTransactions = true;
+			m.showRecentTransactions = (m.action === 'create') ? false : true;
 			m.showRecentClockIns = false;
 			m.showUserStandings = false;
 
 			// set options
-			m.currentQuarter = m.currentQuarter;
-			m.memberStatuses = core.memberStatuses;
-			m.memberTypes = core.memberTypes;
-			m.memberLevels = core.memberLevels;
-			m.skaterLevels = core.skaterLevels;
+			m.currentQuarter = coreData.currentQuarter;
+			m.memberStatuses = coreData.memberStatuses;
+			m.memberTypes = coreData.memberTypes;
+			m.memberLevels = coreData.memberLevels;
+			m.skaterLevels = coreData.skaterLevels;
 
 			/* Datepicker options*/
-			m.today = core.today;
+			m.today = coreData.today;
 
-			m.dateOptions = core.dateOptions;
-			m.format = core.dateFormat;
+			m.dateOptions = coreData.dateOptions;
+			m.dateFormat = coreData.dateFormat;
 
 			m.open = function($event, which) {
 				// set value to null to eliminate directive error
 				m[which] = null;
 				$event.preventDefault();
 				$event.stopPropagation();
-				m.datepickers[which]= true;
+				m.datepickers[which] = true;
 			};
 
 			// datepicker initialization
@@ -118,7 +157,7 @@
 
 						m.committees = {left:[], right:[]};
 
-						m.committees.left  = data.slice(0, mid);  
+						m.committees.left  = data.slice(0, mid);
 						m.committees.right = data.slice(mid, len);
 
 						break;
@@ -189,6 +228,9 @@
 
 			m.setUserData = function(userData) {
 				m.user = userData;
+				console.log('in the edit');
+				m.action = 'update';
+				m.formAction = '/members/'+m.user.id+'/update';
 
 				m.roleId = userData.role_id;
 				m.groupId = userData.group_id;
@@ -197,6 +239,7 @@
 				m.identifiesAs = m.user.identifies_as;
 
 				m.memberStatus = userData.mem_status;
+				m.user.mem_status = userData.mem_status;
 				m.memberType = userData.mem_type;
 				m.memberLevel = userData.mem_level;
 				m.skaterLevel = userData.skater_level;
@@ -216,10 +259,11 @@
 
 				// set amended value as new base count
 				// if amended is empty, set remaining to original
-				requiredCount = _.isEmpty(m.watchReqs[type][qtr].amended) ? m.watchReqs[type][qtr].base : requiredCount = m.watchReqs[type][qtr].amended;
+				requiredCount = _.isEmpty(m.watchReqs[type][qtr].amended) ? m.watchReqs[type][qtr].base : m.watchReqs[type][qtr].amended;
 
 				// set remaining count based on required (base or amended) - already clocked
-				remainingCount = parseInt(requiredCount) - m.watchReqs[type][qtr].attended;
+				remainingCount = (_.isUndefined(m.watchReqs[type][qtr].attended)) ? parseInt(requiredCount) : parseInt(requiredCount) - m.watchReqs[type][qtr].attended;
+
 				// set remaining count to 0 in the case user has met more than required
 				if (remainingCount < 0) remainingCount = 0;
 
@@ -256,26 +300,74 @@
 				});
 			};
 
+			m.submit = function(isValid) {
+
+				if (isValid) {
+					alert('our form is amazing');
+				} else {
+					console.log(isValid);
+				}
+				var fieldEl;
+
+				if (m.action === 'create') {
+					console.log(m.user);
+					$http.post('/members/create', m.user)
+						.success(function(data) {
+							if (data.errors) {
+								_.each(data.errors, function(err, errField) {
+									m.errors[errField] = err;
+									fieldEl = angular.element(document.querySelector('input[name="'+errField+'"]')).addClass('val-err');
+								});
+							} else {
+								console.log('submit the data!');
+							}
+						}).error(function(msg, code) {
+							console.log('error', msg, code);
+							//deferred.reject(msg);
+						});
+				} else {
+					console.log('in the edit');
+					$http.put('/members/'+m.user.id+'/update', m.user)
+				.success(function(data) {
+					console.log('success', data);
+					//deferred.resolve(data);
+				}).error(function(msg, code) {
+					console.log('error');
+					//deferred.reject(msg);
+				});
+				}
+
+				//console.log('ohlo');
+			}
+
 			m.updateValue = function(type, val) {
-				switch (type) {
-					case 'role':
-						m.roleId = val;
-						break;
-					case 'group':
-						m.groupId = val;
-						break;
-					case 'memberStatus':
-						m.memberStatus = val;
-						break;
-					case 'memberType':
-						m.memberType = val;
-						break;
-					case 'memberLevel':
-						m.memberLevel = val;
-						break;
-					case 'skaterLevel':
-						m.skaterLevel = val;
-						break;
+				if (!_.isUndefined(val)) {
+					switch (type) {
+						case 'role':
+							m.roleId = val;
+							m.user.role_id = val;
+							break;
+						case 'group':
+							m.groupId = val;
+							m.user.group_id = val;
+							break;
+						case 'memberStatus':
+							m.memberStatus = val;
+							m.user.mem_status = val;
+							break;
+						case 'memberType':
+							m.memberType = val;
+							m.user.mem_type = val;
+							break;
+						case 'memberLevel':
+							m.memberLevel = val;
+							m.user.mem_level = val;
+							break;
+						case 'skaterLevel':
+							m.skaterLevel = val;
+							m.user.skater_level = val;
+							break;
+					}
 				}
 			};
 
@@ -325,137 +417,178 @@
 
 			/* Prepend value (ie @) */
 			m.prepend = function(val) {
-				if (val === '@') {
+				if (val === '@' && !_.isUndefined(m.venmoHandle)) {
 					var stripped = m.venmoHandle.replace(/@/g, '');
 					if (stripped.length > 0) m.venmoHandle = '@' + stripped;
 				}
 			};
 
-			/* Local functions */
-
-
-			//m.memberType = function() {
-			//	if ()
-			//}
-
-/*
-			dash.timeentries = [];
-			dash.totalTime = {};
-			dash.users = [];
-
-			// Initialize the clockIn and clockOut times to the current time.
-			dash.clockIn = moment();
-			dash.clockOut = moment();
-
-			// Grab all the time entries saved in the database
-			getTimeEntries();
-
-			// Get the users from the database so we can select
-			// who the time entry belongs to
-			getUsers();
-
-			function getUsers() {
-				user.getUsers().then(function(result) {
-					dash.users = result;
-				}, function(error) {
-					console.log(error);
-				});
-			}
-
-			// Fetches the time entries and puts the results
-			// on the dash.timeentries array
-			function getTimeEntries() {
-				time.getTime().then(function(results) {
-					dash.timeentries = results;
-						updateTotalTime(dash.timeentries);
-						console.log(dash.timeentries);
-					}, function(error) {
-						console.log(error);
-					});
-				}
-			}
-
-			// Submit the time entry that will be called 
-			// when we click the "Log Time" button
-			dash.logNewTime = function() {
-				// Make sure that the clock-in time isn't after
-				// the clock-out time!
-				if(dash.clockOut < dash.clockIn) {
-					alert("You can't clock out before you clock in!");
-					return;
-				}
-
-				// Make sure the time entry is greater than zero
-				if(dash.clockOut - dash.clockIn === 0) {
-					alert("Your time entry has to be greater than zero!");
-					return;
-				}
-
-				// Call to the saveTime method on the time service
-				// to save the new time entry to the database
-				time.saveTime({
-					"user_id":dash.timeEntryUser.id,
-					"start_time":dash.clockIn,
-					"end_time":dash.clockOut,
-					"comment":dash.comment
-				}).then(function(success) {
-					getTimeEntries();
-					console.log(success);
-				}, function(error) {
-					console.log(error);
-				});
-
-				getTimeEntries();
-
-				// Reset clockIn and clockOut times to the current time
-				dash.clockIn = moment();
-				dash.clockOut = moment();
-
-				// Clear the comment field
-				dash.comment = "";
-
-				// Deselect the user
-				dash.timeEntryUser = "";
-
-			}
-
-			dash.updateTimeEntry = function(timeentry) {
-
-				// Collect the data that will be passed to the updateTime method
-				var updatedTimeEntry = {
-					"id":timeentry.id,
-					"user_id":timeentry.user.id,
-					"start_time":timeentry.start_time,
-					"end_time":timeentry.end_time,
-					"comment":timeentry.comment
-				}
-
-				// Update the time entry and then refresh the list
-				time.updateTime(updatedTimeEntry).then(function(success) {
-					getTimeEntries();
-					m.showEditDialog = false;
-					console.log(success);
-				}, function(error) {
-					console.log(error);
-				});
-
-			}
-
-			// Specify the time entry to be deleted and pass it to the deleteTime method on the time service
-			dash.deleteTimeEntry = function(timeentry) {
-
-				var id = timeentry.id;
-
-				time.deleteTime(id).then(function(success) {
-					getTimeEntries();
-					console.log(success);
-				}, function(error) {
-					console.log(error);
-				});
-
-			}
-*/
 		}
 
+		/* directives */
+		function dataField() {
+			return {
+				restrict: 'A', // only activate on element attribute
+				require: '?ngModel', // get a hold of NgModelController
+				replace: true,
+				link: function(scope, element, attrs, ngModel) {
+					if (!ngModel) return; // do nothing if no ng-model
+
+					// Specify how UI should be updated
+					ngModel.$render = function() {
+					  element.html(ngModel.$viewValue);
+					};
+
+					// Listen for change events to enable binding
+					/*element.on('blur keyup change', function() {
+					  scope.$evalAsync(read);
+					});*/
+					
+
+					scope.$watch(function() {
+						//console.log('in the watch');
+						return ngModel.$invalid;
+					} ,function(newVal,oldVal) {
+						//console.log('in the other of the watch');
+						//console.log(element.val(), element.prop('required'));
+						//console.log('new:'+newVal, 'old: '+oldVal);
+
+						//if (!element.val() && element.prop('required')) {
+						//	ngModel.$setValidity('required', false);
+						//} else {
+						//	ngModel.$setValidity('required', true);
+						//}
+
+						
+
+					});
+					//read(); // initialize
+
+					// Write data to the model
+					function read() {
+					  var html = element.html();
+					  //console.log(html, attrs, attrs.ngModel);
+					  console.log('val: '+element.val(), 'required: '+element.prop('required'), html);
+					  // When we clear the content editable the browser leaves a <br> behind
+					  // If strip-br attribute is provided then we strip this out
+					  if ( attrs.stripBr && html == '<br>' ) {
+					    html = '';
+					  }
+					  
+					  if (!element.val() && element.prop('required')) {
+					  	console.log('NOT valid');
+					  	ngModel.$setValidity('required', false);
+					  } else {
+					  	console.log('VALID');
+					  	ngModel.$setValidity('required', true);
+					  }
+					  ngModel.$setViewValue(html);
+					}
+				},
+				//templateUrl: 'form-directives/text-condreq-field.html'
+			}
+		}
+
+		function textField() {
+			return {
+				restrict: 'E',
+				scope: {
+					ngmodelVar: '='
+				},
+				replace: true,
+				link: function(scope, element, attrs) {
+					scope.fieldType = attrs.fieldtype;
+					scope.fieldClass = attrs.fieldclass;
+					scope.fieldName = attrs.fieldname;
+					scope.isRequired = attrs.isrequired;
+					//scope.placeholder = attrs.placeholder;
+					//scope.fieldVal = (attrs.submitted) ? attrs.submitted : attrs.original;
+					//scope.errorMsg = attrs.errormsg;
+				},
+				templateUrl: 'form-directives/text-field.html'
+			}
+		}
+
+		
+
+
+		function venmoField() {
+			return {
+				restrict: 'E',
+				templateUrl: 'form-directives/venmo-field.html'
+			}
+		}
+
+		function selectField() {
+			return {
+				restrict: 'E',
+				scope: {
+					ngmodelVar: '=',
+					ngchangeVar: '=',
+					ngselectedVar: '='
+				},
+				replace: true,
+				link: function(scope, element, attrs) {
+					scope.fieldName = attrs.fieldname;
+					scope.isRequired = attrs.isrequired;
+					scope.showChoose = attrs.showchoose;
+					if (attrs.choosetext) scope.chooseText = attrs.choosetext;
+					scope.fieldOptions = JSON.parse(attrs.fieldoptions);
+					//scope.placeholder = attrs.placeholder;
+					//scope.fieldVal = (attrs.submitted) ? attrs.submitted : attrs.original;
+					//scope.errorMsg = attrs.errormsg;
+				},
+				templateUrl: 'form-directives/select-field.html'
+			}
+		}
+
+		function datepickerDob(coreData) {
+			return {
+				restrict: 'AE',
+				templateUrl: 'form-directives/datepicker-dob.html'
+			}
+		}
+
+		function datepickerJoin(coreData) {
+			return {
+				restrict: 'AE',
+				templateUrl: 'form-directives/datepicker-join.html'
+			}
+		}
+
+		function datepickerInduction(coreData) {
+			return {
+				restrict: 'AE',
+				templateUrl: 'form-directives/datepicker-induction.html'
+			}
+		}
+
+		function datepickerTransfer(coreData) {
+			return {
+				restrict: 'AE',
+				templateUrl: 'form-directives/datepicker-transfer.html'
+			}
+		}
+
+		function datepickerRetired(coreData) {
+			return {
+				restrict: 'AE',
+				templateUrl: 'form-directives/datepicker-retired.html'
+			}
+		}
+
+		function datepickerActivestandingstart(coreData) {
+			return {
+				restrict: 'AE',
+				templateUrl: 'form-directives/datepicker-standingstart.html'
+			}
+		}
+
+		function datepickerActivestandingend(coreData) {
+			return {
+				restrict: 'AE',
+				templateUrl: 'form-directives/datepicker-standingend.html'
+			}
+		}
 
 })();

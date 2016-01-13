@@ -8,8 +8,8 @@ class UserClockin extends Model {
 	protected $table = 'user_clockins';
 
 	// An array of the fields we can fill in the time_entries table
-	protected $fillable = ['user_id', 'clock_number', 'type', 'calendar_date', 'calendar_time', 'clocked',
-												'duplicate', 'late_clockin', 'late_clockin_note', 'invalid', 'invalid_desc'];
+	protected $fillable = ['user_id', 'clock_number', 'type', 'calendar_name', 'calendar_date', 'calendar_time',
+												'clocked', 'duplicate', 'late_clockin', 'late_clockin_note', 'invalid', 'invalid_desc'];
 
 	protected $hidden = ['user_id', 'created_at', 'updated_at'];
 

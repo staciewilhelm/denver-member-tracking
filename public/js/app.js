@@ -5,7 +5,8 @@
 	angular
 		.module('denverTracking', [
 			'ngResource',
-			'ui.bootstrap'
+			'ui.bootstrap',
+			'autocomplete'
 		])
 		.constant('_',
 			window._

@@ -349,8 +349,8 @@
 		</div><!-- /.container-fluid -->
 	</div><!-- /#page-content-wrapper -->
 
-	<script type="text/ng-template" id="practiceHistory">
-		@include('modals.practice-history')
+	<script type="text/ng-template" id="clockinsStandings">
+		@include('modals.clockins-standings')
 	</script>
 
 </div>

@@ -103,11 +103,13 @@ class GuestController extends Controller {
 
 				$event = explode(': ', $eventDetails[1]);
 				$type = $event[0];
+				$calendarName = $event[1];
 
 				$data = array(
 					'user_id' => $userId,
 					'clock_number' => $input['clock_number'],
-					'type' => $type,
+					'type' => strtolower($type),
+					'calendar_name' => $calendarName,
 					'calendar_date' => $this->formatDateTime($eventDateStartTime),
 					'calendar_time' => $this->formatDateTime($eventDateStartTime, 'time'),
 					'clocked' => $this->formatDateTime($input['clock_time'], 'datetime')
@@ -136,7 +138,7 @@ class GuestController extends Controller {
 				}
 
 				// clocking in for last hour; need full two hours to count as valid scrimmage
-				if (($type === 'Scrimmage') && ($startTime === '08:40PM')) {
+				if (($type === 'scrimmage') && ($startTime === '08:40PM')) {
 					$data['invalid_desc'] = 'Clock-in was for last hour of scrimmage.';
 					$data['invalid'] = true;
 				}
@@ -144,8 +146,8 @@ class GuestController extends Controller {
 				$duplicateClockins = UserClockin::where('user_id', '=', $data['user_id'])
 					->where('clock_number', '=', $data['clock_number'])
 					->where('type', '=', $data['type'])
+					->where('calendar_name', '=', $data['calendar_name'])
 					->where('calendar_date', '=', $data['calendar_date'])
-					->where('calendar_time', '=', $data['calendar_time'])
 					->where('invalid', '=', false)
 					->get();
 
@@ -155,7 +157,35 @@ class GuestController extends Controller {
 
 				// also need to update USER_REQUIREMENTS count
 				} else {
-					UserRequirement::find();
+					$req = UserRequirement::where('user_id', '=', $data['user_id'])
+						->where('year', '=', date('Y'))
+						->where('quarter', '=', $this->currentQtr())
+						->first();
+
+					switch ($data['type']) {
+						case 'practice':
+							$req->practice_count++;
+							break;
+						case 'scrimmage':
+							$req->practice_count++;
+							$req->scrimmage_count++;
+							break;
+						case 'activity':
+							$req->activity_count++;
+							break;
+						case 'event':
+							$req->event_count++;
+							break;
+						case 'bout':
+							$req->bout_count++;
+							break;
+						case 'facility':
+							$req->facility_count++;
+							break;
+					}
+
+					$req->save();
+
 				}
 
 				$clockin = new UserClockin();
@@ -186,6 +216,25 @@ class GuestController extends Controller {
 		}
 
 		if ($dataType === 'display') return date('U', strtotime($date)) * 1000;
+	}
+
+	// merge with member controller currentQtr
+	protected function currentQtr() {
+		$n = date('n');
+		switch ($n) {
+			case $n < 4:
+				return 1;
+				break;
+			case ($n > 3 && $n < 7):
+				return 2;
+				break;
+			case ($n > 6 && $n < 10):
+				return 3;
+				break;
+			case ($n > 9):
+				return 4;
+				break;
+		}
 	}
 
 }

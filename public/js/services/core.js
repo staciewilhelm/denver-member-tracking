@@ -4,11 +4,14 @@
 
 	angular
 		.module('denverTracking')
-		.factory('core', core);
+		.factory('coreData', coreData)
+		.factory('coreFns', coreFns);
 
-		function core() {
-
+		function coreData() {
 			var currentQuarter = moment().quarter(),
+					currentYear = new Date().getFullYear(),
+					allQuarters = [1, 2, 3, 4],
+					upcomingYears = [{year: currentYear}],
 					memberStatuses = ['Active', 'Suspended', 'Alumni', 'Retired', 'Pending'],
 					memberTypes = ['Skater', 'Volunteer', 'Associate'],
 					memberLevels = ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6'],
@@ -25,10 +28,19 @@
 						intranet: 'https://intranet.denverrollerderby.org',
 						calendar: 'http://calendar.denverrollerderby.org',
 						contacts: 'https://www.google.com/contacts/'
-					};
+					}
+
+			var nextCount = currentYear, nextIndex = 0;
+			for (nextIndex = 0; nextIndex < 5; nextIndex++) {
+				nextCount = nextCount + 1;
+				upcomingYears.push({year: parseInt(nextCount)});
+			}
 
 			return {
 				currentQuarter: currentQuarter,
+				currentYear: currentYear,
+				allQuarters: allQuarters,
+				upcomingYears: upcomingYears,
 				memberStatuses: memberStatuses,
 				memberTypes: memberTypes,
 				memberLevels: memberLevels,
@@ -39,6 +51,28 @@
 				googleURLs: googleURLs
 			};
 
+		};
+
+		function coreFns() {
+			var toggle = function(selected, current, isObject) {
+				if (isObject) {
+					if (current[0].indexOf('-') === -1) {
+						return ['-last_name', 'first_name'];
+					} else {
+						return ['last_name', 'first_name'];
+					}
+				} else {
+					if (current === selected && current.indexOf('-') === -1) {
+						return '-'+selected;
+					} else {
+						return selected;
+					}
+				}
+			};
+
+			return {
+				toggle: toggle
+			}
 		}
 
 })();

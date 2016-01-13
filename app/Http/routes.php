@@ -84,14 +84,9 @@ Route::group([
 
 	// Admin Only routes
 	Route::group(['roles'=>'admin'], function () {
-/*
-		Route::group(['namespace' => 'User'], function()
-    {
-        // Controllers Within The "App\Http\Controllers\Admin\User" Namespace
-    });
-*/
-		Route::get('/payments/redirect', 'Members\MemberController@authorized');
-		Route::get('/payments', 'Members\MemberController@transactions');
+		/*Route::group(['namespace' => 'User'], function() {
+			// Controllers Within The "App\Http\Controllers\Admin\User" Namespace
+    });*/
 
 		// routes for a specific member
 		Route::group(['prefix' => 'members/{account_id}'], function () {
@@ -111,17 +106,35 @@ Route::group([
 		// routes for member listing
 		Route::group(['prefix' => 'members'], function () {
 			// Matches the members URL
-			Route::get('/', 'Members\MemberController@getMembers');
+			Route::get('/', 'Members\MemberController@listMembers');
+
+			Route::get('create', 'Members\MemberController@create');
+			Route::post('create', 'Members\MemberController@create');
 
 			// Matches the members/sync URL
 			/*Route::get('sync', 'Members\GoogleController@sync');
 			Route::post('sync', 'Members\GoogleController@sync');*/
-
 		});
 		// end members routing
 
-		// Matches the reports URL
+		Route::get('/payments/redirect', 'Members\MemberController@authorized');
+		Route::get('/payments', 'Members\MemberController@transactions');
+
 		Route::get('reports', 'ReportsController@listReports');
+		Route::get('requirements', 'RequirementsController@index');
+		Route::get('transactions', 'UserTransactionsController@index');
+
+		// admin only API routes
+		Route::post('api/requirements', 'RequirementsController@store');
+		Route::put('api/requirements/{id}', 'RequirementsController@update');
+		Route::delete('api/requirements/{id}', 'RequirementsController@destroy');
+
+		Route::post('api/transactions', 'UserTransactionsController@store');
+		Route::put('api/transactions/{id}', 'UserTransactionsController@update');
+		Route::delete('api/transactions/{id}', 'UserTransactionsController@destroy');
+
+		Route::get('api/usersAutocomplete', 'UsersController@autocompleteUsers');
+		Route::resource('api/usersRequirements', 'UsersController@getUsersRequirements');
 
 	});
 	// end admin only routes
@@ -144,7 +157,6 @@ Route::group(['prefix' => 'api'], function () {
 	*/
 
 	Route::resource('clockins', 'UserClockinsController');
-	Route::resource('users', 'UsersController@users');
 	Route::resource('clockNumbers', 'UsersController@clockNumbers');
 
 	// Matches the api/practices URL
@@ -156,8 +168,4 @@ Route::group(['prefix' => 'api'], function () {
 	Route::get('member-types', 'DenverApiController@memberTypes');
 
 });
-
-
-
-
 

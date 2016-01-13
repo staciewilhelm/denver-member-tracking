@@ -14,9 +14,11 @@
 
 			nav.activeUrl = 'dashboard';
 			if (parseUrl.indexOf('members') > -1) nav.activeUrl = 'members';
+			if (parseUrl.indexOf('requirements') > -1) nav.activeUrl = 'requirements';
+			if (parseUrl.indexOf('transactions') > -1) nav.activeUrl = 'transactions';
+			// non-auth
 			if (parseUrl.indexOf('clock-in') > -1) nav.activeUrl = 'clock-in';
 			if (parseUrl.indexOf('waiver') > -1) nav.activeUrl = 'waiver';
-
 		};
 
 })();

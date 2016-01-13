@@ -1,5 +1,5 @@
 <div class="modal-header">
-	<h3 class="modal-title">{{mod.team}} Clockins / Standings</h3>
+	<h3 class="modal-title">Practice History for {{mod.memberName}}</h3>
 </div>
 <div class="modal-body">
 

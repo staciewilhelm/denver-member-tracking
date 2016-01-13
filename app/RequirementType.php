@@ -7,7 +7,7 @@ class RequirementType extends Model {
 	protected $table = 'requirement_types';
 
 	public function requirements() {
-		return $this->hasMany('App\Requirement');
+		return $this->hasMany('App\Requirement', 'requirement_type_id', 'id');
 	}
 
 }

@@ -18,12 +18,12 @@ class Team extends Model {
 	 */
 	protected $fillable = ['name', 'abbr'];
 
-	public function users() {
-		return $this->belongsToMany('App\User', 'users_teams', 'team_id', 'user_id');
+	public function requirements() {
+		return $this->hasMany('App\Requirement', 'team_id', 'id');
 	}
 
-	public function requirements() {
-		return $this->hasMany('App\Requirement');
+	public function users() {
+		return $this->belongsToMany('App\User', 'users_teams', 'team_id', 'user_id');
 	}
 
 }

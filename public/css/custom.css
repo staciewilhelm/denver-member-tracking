@@ -1,4 +1,9 @@
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}
 
+.loading-spinner {margin: 200px auto; width: 100%;}
+.loading-spinner span {margin: 0 50%;}
 
 /* Denver styles */
 
@@ -6,6 +11,8 @@
 .font-light {font-family: 'Open Sans',Helvetica,sans-serif; font-weight: 300;}
 .font-normal {font-family: 'Open Sans',Helvetica,sans-serif; font-weight: 400;}
 .font-semibold {font-family: 'Open Sans',Helvetica,sans-serif; font-weight: 600;}
+
+@import url('//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css');
 
 body {
 	color: #7f7e7e;
@@ -195,6 +202,26 @@ p span.dashboard-warning,
 	padding: 4px;
 	background-color: #c00;
 }
+
+div.val-err input,
+input.val-err,
+div.val-err textarea,
+textarea.val-err {
+	border:2px solid #c00;
+}
+
+div.val-err label.checkbox-inline,
+div.val-err label.select-lbl,
+p.val-err {
+	font-weight: bold;
+	color: #fff;
+	margin: 0;
+	padding: 4px;
+	background-color: #c00;
+}
+
+div.val-err label.select-lbl {display: inline-block;}
+
 .standing p.header span.dates {margin-left: 10px;}
 
 .standing p.footer {font-size: 11px;}
@@ -202,7 +229,6 @@ p span.dashboard-warning,
 	color: #ebebeb;
 	font-size: 12px;
 }
-
 
 .sidebar-nav {
     position: absolute;
@@ -285,7 +311,6 @@ p span.dashboard-warning,
 	margin-top: 50px;
 }
 
-
 div.landing .content {
 	margin: 75px auto 0 auto;
 	width: 50%;
@@ -304,6 +329,89 @@ div.landing .content h1 {text-align: center;}
 	border: 2px solid #c00;
 }
 
+
+.member-list {
+	margin-top: 25px;
+	vertical-align: middle;
+}
+
+.member-list .page-header button {
+	margin-left: 25px;
+	float: right;
+}
+
+/* Requirements Module styles */
+table.req-table th.req-type {
+	width: 20%;
+	min-width: 175px;
+}
+
+table.req-table th.req-actions {
+	width: 15%;
+	min-width: 145px;
+}
+
+table.req-table input {
+	width: 35%;
+	text-align: center;
+}
+
+.success-msg {width: 50%; margin-top: 20px; padding:12px; color: #4F8A10;
+	background-color: #DFF2BF;}
+/*.isa_success, .isa_warning, .isa_error {
+	margin: 10px 0px;
+	padding:12px;
+}
+.isa_info {
+	color: #00529B;
+	background-color: #BDE5F8;
+}
+.isa_warning {
+    color: #9F6000;
+    background-color: #FEEFB3;
+}
+.isa_error {
+    color: #D8000C;
+    background-color: #FFBABA;
+}*/
+.success-msg i {
+	margin:10px 22px;
+	font-size:2em;
+	vertical-align:middle;
+}
+/* end Requirements Module styles */
+
+/* Venmo transactions */
+form.transaction-form {}
+table.transactions-table {}
+
+form.transaction-form textarea,
+table.transactions-table textarea {
+	width: 100%;
+	max-width: 100%;
+	height: 88px;
+	max-height: 88px;
+}
+
+form.transaction-form .top-pd {
+	padding-top: 25px;
+}
+
+table.transactions-table tr.overdue td {
+	font-weight: bold;
+	color: #fff;
+	margin: 0;
+	background-color: #c00;
+}
+
+table.transactions-table tr.overdue td strong {
+	color: #fff;
+}
+
+table.transactions-table td span.trans-date {
+	margin-top: 0 !important;
+}
+/* end Venmo transactions */
 
 /* sb admin styles */
 
@@ -546,6 +654,11 @@ table.dataTable thead .sorting:after {
   display: inline-block;
 }
 
+input.datepicker,
+.form-control.less-pad {
+	padding: 6px 8px !important;
+}
+
 .requirements-table table tbody tr td {
 	vertical-align: middle !important;
 	padding: 6px !important;
@@ -635,6 +748,18 @@ textarea, textarea.form-control,
 input[type="checkbox"], input[type="text"], input.form-control,
 button.btn {
 	border-radius: 0px !important;
+}
+
+/* For Firefox */
+input[type='number'] {
+	-moz-appearance:textfield;
+}
+
+/* Webkit browsers like Safari and Chrome */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
 }
 
 input[type="text"].xsm {

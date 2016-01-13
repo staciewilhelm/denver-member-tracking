@@ -6,7 +6,7 @@
 		.module('denverTracking')
 		.controller('Dashboard', Dashboard);
 
-		function Dashboard(_, $scope, core, $modal, $log, calcReqs) {
+		function Dashboard(_, $scope, $modal, $log, coreData, calcReqs) {
 
 			var d = this;
 
@@ -27,12 +27,12 @@
 			d.seletedTravelTeams = [];
 
 			// set options
-			d.currentQuarter = core.currentQuarter;
-			d.memberStatuses = core.memberStatuses;
-			d.memberTypes = core.memberTypes;
-			d.memberLevels = core.memberLevels;
-			d.skaterLevels = core.skaterLevels;
-			d.gURLs = core.googleURLs;
+			d.currentQuarter = coreData.currentQuarter;
+			d.memberStatuses = coreData.memberStatuses;
+			d.memberTypes = coreData.memberTypes;
+			d.memberLevels = coreData.memberLevels;
+			d.skaterLevels = coreData.skaterLevels;
+			d.gURLs = coreData.googleURLs;
 
 			d.setUserData = function(userData) {
 				d.user = userData;
@@ -68,18 +68,21 @@
 				d.loggedScrimmages = 0;
 
 				_.each(userClockins, function(c) {
-					c.qtr = moment(c.clocked).quarter();
+					if (!c.duplicate) {
+						c.qtr = moment(c.clocked).quarter();
 
-					switch (c.type) {
-						case 'practice':
-							d.loggedPractices++;
-							break;
-						case 'scrimmage':
-							d.loggedScrimmages++;
-							break;
+						switch (c.type) {
+							case 'practice':
+								d.loggedPractices++;
+								break;
+							case 'scrimmage':
+								d.loggedPractices++;
+								d.loggedScrimmages++;
+								break;
+						}
+
+						d.userClockins.push(c);
 					}
-
-					d.userClockins.push(c);
 				});
 
 				d.activeStanding = null;
@@ -111,7 +114,7 @@
 						if (_.isNull(d.currBalance.dueDate) || (!_.isNull(d.currBalance.dueDate) && new Date(t.due) < d.currBalance.dueDate))
 							d.currBalance.dueDate = new Date(t.due);
 
-						if (new Date(core.today) > new Date(t.due)) d.currBalance.pastDue = true;
+						if (new Date(coreData.today) > new Date(t.due)) d.currBalance.pastDue = true;
 					}
 
 					d.userTransactions.push(t);
@@ -155,14 +158,11 @@
 				var modalInstance = $modal.open({
 					backdrop: false,
 					scope: $scope,
-					templateUrl: 'practiceHistory',
-					controller: 'Modal',
+					templateUrl: 'clockinsStandings',
+					controller: 'ModalClockinsStandings',
 					controllerAs: 'mod',
 					size: 'lg',
 					resolve: {
-						items: function () {
-							return ['HI', 'hola', 'yo'];
-						},
 						team: function () {
 							return _.findWhere(d.teamClockinsStandings, {id:teamId});
 						},
@@ -177,7 +177,7 @@
 				}, function () {
 					$log.info('Modal dismissed at: ' + new Date());
 				});
-		  };
+			};
 
 			/* Toggle Sidebar Data */
 			d.toggleTransactions = function() {

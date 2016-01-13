@@ -53,41 +53,53 @@
 				_.each(headers, function(hName) {
 					watchReqs[hName] = {1:{}, 2:{}, 3:{}, 4:{}};
 
-					// loop through user requirements
-					_.each(relatedData, function(ur) {
-						amendedCount = null; // reset amended count
+					// create member (will not have user requirements yet)
+					if (!relatedData) {
+						_.each(watchReqs[hName], function(obj, qtr) {
+							// set base requirement count
+							baseCount = checkData['q'+qtr+hName];
+							watchReqs[hName][qtr] = {base:baseCount, amended:null, attended:0, remaining:baseCount};
+						});
 
-						// set base requirement count
-						baseCount = checkData['q'+ur.quarter+hName];
+					// edit member
+					} else {
+						// loop through user requirements
+						_.each(relatedData, function(ur) {
+							amendedCount = null; // reset amended count
 
-						// find the index of the base requirement
-						baseReqIndex = _.findIndex(currentReqs[hName], {type:'base', quarter:ur.quarter});
+							// set base requirement count
+							baseCount = checkData['q'+ur.quarter+hName];
 
-						// and set the id of the record
-						currentReqs[hName][baseReqIndex].id = ur.id;
+							// find the index of the base requirement
+							baseReqIndex = _.findIndex(currentReqs[hName], {type:'base', quarter:ur.quarter});
 
-						// check if the user has an amended requirement
-						if (ur['min_'+hName] !== checkData['q'+ur.quarter+hName]) {
-							// set both the amended and base count to the user requiremet
-							amendedCount = baseCount = ur['min_'+hName];
+							// and set the id of the record
+							currentReqs[hName][baseReqIndex].id = ur.id;
 
-							// and update the amended count (default is null)
-							currentReqs[hName][baseReqIndex].amended = amendedCount;
-						}
-						// set the remaining requirement count
-						// if the base count is more than the user requirement count, subtract
-						// otherwise, default to 0
-						remainingCount = (baseCount > ur[hName+'_count']) ? (baseCount - ur[hName+'_count']) : 0;
+							// check if the user has an amended requirement
+							if (ur['min_'+hName] !== checkData['q'+ur.quarter+hName]) {
+								// set both the amended and base count to the user requiremet
+								amendedCount = baseCount = ur['min_'+hName];
 
-						// find the index of the current requirements
-						remainingReqIndex = _.findIndex(currentReqs[hName], {type:'remaining', quarter:ur.quarter}); 
-						// set remaining.count (requirements to be met) and
-						// the remaining.attended (attended requirements)
-						currentReqs[hName][remainingReqIndex].count = remainingCount;
-						currentReqs[hName][remainingReqIndex].attended = ur[hName+'_count'];
+								// and update the amended count (default is null)
+								currentReqs[hName][baseReqIndex].amended = amendedCount;
+							}
+							// set the remaining requirement count
+							// if the base count is more than the user requirement count, subtract
+							// otherwise, default to 0
+							remainingCount = (baseCount > ur[hName+'_count']) ? (baseCount - ur[hName+'_count']) : 0;
 
-						watchReqs[hName][ur.quarter] = {base:checkData['q'+ur.quarter+hName], amended: amendedCount, attended:ur[hName+'_count'], remaining:remainingCount};
-					});
+							// find the index of the current requirements
+							remainingReqIndex = _.findIndex(currentReqs[hName], {type:'remaining', quarter:ur.quarter}); 
+							// set remaining.count (requirements to be met) and
+							// the remaining.attended (attended requirements)
+							currentReqs[hName][remainingReqIndex].count = remainingCount;
+							currentReqs[hName][remainingReqIndex].attended = ur[hName+'_count'];
+
+							watchReqs[hName][ur.quarter] = {base:checkData['q'+ur.quarter+hName], amended: amendedCount, attended:ur[hName+'_count'], remaining:remainingCount};
+						});
+					}
+
 				});
 
 				return {currentReqs:currentReqs, watchReqs:watchReqs};
@@ -123,10 +135,13 @@
 				if (_.isUndefined(userReqs)) {
 					return 'An error occurred';
 				} else {
-					var totalRequired;
+					var totalRequired, totalRemaining;
 					_.each(checkData, function(bCount, bIndex) {
 						totalRequired = (userReqs['min_'+bIndex] !== bCount) ? userReqs['min_'+bIndex] : bCount;
-						remainingData[bIndex] = {required: totalRequired, remaining: (totalRequired - userReqs[bIndex+'_count'])};
+						// set totalRemaining to 0 if clockin total is greater than requirement total
+						totalRemaining = (totalRequired < userReqs[bIndex+'_count']) ? 0 : (totalRequired - userReqs[bIndex+'_count']);
+
+						remainingData[bIndex] = {required: totalRequired, remaining: totalRemaining};
 					});
 				}
 
