@@ -162,31 +162,57 @@ class GuestController extends Controller {
 						->where('quarter', '=', $this->currentQtr())
 						->first();
 
-					switch ($data['type']) {
-						case 'practice':
-							$req->practice_count++;
-							break;
-						case 'scrimmage':
-							$req->practice_count++;
-							$req->scrimmage_count++;
-							break;
-						case 'activity':
-							$req->activity_count++;
-							break;
-						case 'event':
-							$req->event_count++;
-							break;
-						case 'bout':
-							$req->bout_count++;
-							break;
-						case 'facility':
-							$req->facility_count++;
-							break;
+					// if user requirements do not exist, create a record
+					if (empty($req)) {
+						$newUserReq = new UserRequirement();
+
+						$newUserReq->user_id = $data['user_id'];
+						$newUserReq->year = date('Y');
+						$newUserReq->quarter = $this->currentQtr();
+						
+						$newUserReq->practice_count = 0;
+						$newUserReq->scrimmage_count = 0;
+						$newUserReq->activity_count = 0;
+						$newUserReq->facility_count = 0;
+						$newUserReq->bout_count = 0;
+						$newUserReq->committee_count = 0;
+
+						$newUserReq->min_practice = null;
+						$newUserReq->min_scrimmage = null;
+						$newUserReq->min_activity = null;
+						$newUserReq->min_facility = null;
+						$newUserReq->min_bout = null;
+						$newUserReq->min_committee = null;
+
+						$newUserReq->save();
+
+					// otherwise, update the user requirements count
+					} else {
+						switch ($data['type']) {
+							case 'practice':
+								$req->practice_count++;
+								break;
+							case 'scrimmage':
+								$req->practice_count++;
+								$req->scrimmage_count++;
+								break;
+							case 'activity':
+								$req->activity_count++;
+								break;
+							case 'event':
+								$req->event_count++;
+								break;
+							case 'bout':
+								$req->bout_count++;
+								break;
+							case 'facility':
+								$req->facility_count++;
+								break;
+						}
+
+						$req->save();
 					}
-
-					$req->save();
-
-				}
+				} // end duplicate clockin
 
 				$clockin = new UserClockin();
 				$clockin->fill($data);

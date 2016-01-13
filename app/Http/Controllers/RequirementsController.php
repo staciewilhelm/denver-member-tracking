@@ -21,7 +21,7 @@ class RequirementsController extends Controller {
 	 * @return void
 	 */
 	public function __construct() {
-		$this->middleware('auth');
+		
 	}
 
 	// Gets all users in the users table and returns them

@@ -83,7 +83,7 @@ Route::group([
 
 
 	// Admin Only routes
-	Route::group(['roles'=>'admin'], function () {
+	Route::group(['middleware'=>'auth', 'roles'=>'admin'], function () {
 		/*Route::group(['namespace' => 'User'], function() {
 			// Controllers Within The "App\Http\Controllers\Admin\User" Namespace
     });*/
