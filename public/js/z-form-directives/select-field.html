@@ -1,0 +1,4 @@
+<select id="{{fieldName}}" name="{{fieldName}}" required="{{isRequired}}" ng-model="ngmodelVar" ng-change="ngchangeVar">
+	<option ng-if="showChoose === 'true'" value="">{{chooseText}}</option>
+	<option ng-repeat="option in fieldOptions" value="{{role.id}}" ng-selected="ngselectedVar === option.id">{{option.name}}</option>
+</select>
